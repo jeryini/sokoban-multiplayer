@@ -1,0 +1,29 @@
+#!/usr/bin/env node
+var debug = require('debug')('Sokoban-multiplayer');
+var app = require('../app');
+
+// port on which to listen
+app.set('port', process.env.PORT || 3000);
+
+// listen for connections
+var server = app.listen(app.get('port'), function() {
+  debug('Express server listening on port ' + server.address().port);
+});
+
+var io = require('socket.io')(server)
+
+// listen on connection events for incoming socket
+io.on('connection', function(socket){
+    console.log('a user connected');
+    socket.on('disconnect', function(){
+        console.log('user disconnected');
+    });
+    socket.on('chat message', function(msg){
+        console.log('message: ' + msg);
+
+        // send message to everyone, including the sender
+        io.emit('chat message', msg);
+    });
+
+    // broadcast to anyone except certain socket
+});

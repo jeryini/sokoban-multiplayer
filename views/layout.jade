@@ -1,0 +1,22 @@
+doctype html
+html
+  head
+    title= title
+    link(rel='stylesheet', href='/stylesheets/style.css')
+    script(src='/socket.io/socket.io.js')
+  body
+    block content
+    script(src='http://code.jquery.com/jquery-1.11.1.js')
+    script(type='text/javascript').
+        var socket = io();
+        $('form').submit(function(){
+            // emit event message of type chat message
+            // with value of input with id m
+            socket.emit('chat message', $('#m').val());
+            $('#m').val('');
+            return false;
+        });
+        // on message receive
+        socket.on('chat message', function(msg) {
+            $('#messages').append($('<li>').text(msg));
+        });
