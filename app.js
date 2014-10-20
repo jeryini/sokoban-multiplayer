@@ -12,7 +12,6 @@ var users = require('./routes/users');
 // create new express application
 var app = express();
 
-
 // view engine setup
 // the directory where the template files are located
 app.set('views', path.join(__dirname, 'views'));

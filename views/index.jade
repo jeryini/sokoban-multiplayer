@@ -1,7 +1,11 @@
 extends layout
 
-block content
+block sokoban
+  div#sokoban
   ul#messages
-  form(action="")
-    input(id="m", autocomplete="off")
-    button Send
+  form(action="")#restart
+    button Restart
+  script(src='http://code.jquery.com/jquery-1.11.1.js')
+  script(src='/socket.io/socket.io.js')
+  script(src='/javascripts/game.js')
+  script(src='/javascripts/gameClient.js')

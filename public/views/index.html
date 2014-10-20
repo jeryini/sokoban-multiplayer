@@ -2,29 +2,17 @@
 <html>
   <head>
     <title></title>
-    <link rel="stylesheet" href="/stylesheets/style.css">
-    <script src="/socket.io/socket.io.js"></script>
+    <link rel="stylesheet" href="/stylesheets/sokoban.css">
   </head>
   <body>
+    <div id="sokoban"></div>
     <ul id="messages"></ul>
-    <form action="">
-      <input id="m" autocomplete="off">
-      <button>Send</button>
+    <form action="" id="restart">
+      <button>Restart</button>
     </form>
     <script src="http://code.jquery.com/jquery-1.11.1.js"></script>
-    <script type="text/javascript">
-      var socket = io();
-      $('form').submit(function(){
-          // emit event message of type chat message
-          // with value of input with id m
-          socket.emit('chat message', $('#m').val());
-          $('#m').val('');
-          return false;
-      });
-      // on message receive
-      socket.on('chat message', function(msg) {
-          $('#messages').append($('<li>').text(msg));
-      });
-    </script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/javascripts/game.js"></script>
+    <script src="/javascripts/gameClient.js"></script>
   </body>
 </html>
