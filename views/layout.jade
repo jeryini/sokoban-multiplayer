@@ -1,9 +1,7 @@
 doctype html
-html
-  head
-    title= title
-    link(rel='stylesheet', href='/stylesheets/sokoban.css')
+html(lang="en")
+  include ./includes/head
+  include ./includes/header
   body
-    block sokoban
-
-
+    block content
+  include ./includes/foot

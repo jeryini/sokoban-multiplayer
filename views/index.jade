@@ -1,11 +1,28 @@
 extends layout
 
-block sokoban
-  div#sokoban
-  ul#messages
-  form(action="")#restart
-    button Restart
-  script(src='http://code.jquery.com/jquery-1.11.1.js')
-  script(src='/socket.io/socket.io.js')
-  script(src='/javascripts/game.js')
-  script(src='/javascripts/gameClient.js')
+block content
+  div.container
+    //.row
+      button.btn.btn-lg.btn-primary(href="test", type="button") New multiplayer
+    #sokoban
+    form(action="")#restart
+      button.btn.btn-lg.btn-danger Restart
+    .list-group
+      .list-group-item.active
+        h4.list-group-item-heading Game room 1
+        p.list-group-item-text Description of game room 1
+        a.btn.btn-sm.btn-info.room#room1 Join
+      .list-group-item#room2
+        h4.list-group-item-heading Game room 2
+        p.list-group-item-text Description of game room 2
+        a.btn.btn-sm.btn-info.room#room2 Join
+      .list-group-item#room3
+        h4.list-group-item-heading Game room 3
+        p.list-group-item-text Description of game room 3
+        a.btn.btn-sm.btn-info.room#room3 Join
+  // TODO: New Single player
+  // TODO: New Multiplayer: New game room!
+  // TODO: Join multiplayer game: List game rooms!
+  // TODO: Server side logic for implementing the game room?
+  // TODO: Namespaces?
+

@@ -15,11 +15,9 @@ var server = app.listen(app.get('port'), function() {
 // initialize socket
 var io = require('socket.io')(server);
 
-// create new game
-var gameServer = new GameServer();
-gameServer.gameImage = levels[2];
-gameServer.setGameStateFromImage();
-
+// create a hash array that will hold games
+// in progress for each room. Key is the id of the room.
+var games = {};
 
 // listen on connection events for incoming socket
 // this fires every time new client connects
@@ -27,20 +25,39 @@ io.on('connection', function(socket){
     // socket.io already assigns unique id to every socket
     console.log('a user connected with id: ' + socket.id);
 
-    // add client information to game server state
-    gameServer.clients[socket.id] = {
-        socket: socket,
-        // assign one of the available players
-        playerId: gameServer.freePlayers.pop()
-    };
+    // event for joining a room
+    socket.on('join', function(roomId) {
+        // store the room in socket session
+        socket.roomId = roomId;
 
-    // send game object to user
-    socket.emit('starting state', {
-        playerId: gameServer.clients[socket.id].playerId,
-        stones: gameServer.stones,
-        blocks: gameServer.blocks,
-        placeholders: gameServer.placeholders,
-        players: gameServer.players
+        // check for if game already exists for
+        // specified room id
+        if (!(roomId in games)) {
+            // does not exist, add it
+            games[roomId] = new GameServer();
+            games[roomId].gameImage = levels[2];
+            games[roomId].setGameStateFromImage();
+        }
+
+        // add client information to game server state
+        games[roomId].clients[socket.id] = {
+            socket: socket,
+            // assign one of the available players
+            playerId: games[roomId].freePlayers.pop()
+        };
+
+        // join the passed room
+        socket.join(roomId);
+
+        // send game object to user
+        socket.emit('starting state', {
+            roomId: roomId,
+            playerId: games[roomId].clients[socket.id].playerId,
+            stones: games[roomId].stones,
+            blocks: games[roomId].blocks,
+            placeholders: games[roomId].placeholders,
+            players: games[roomId].players
+        });
     });
 
     // event execute action, where action can be:
@@ -55,37 +72,43 @@ io.on('connection', function(socket){
         // is synchronized as the action should be executable if client
         // send it to the server (it implicitly means that the state
         // does not match).
-        var isExecuted = gameServer.checkExecuteAction(action, gameServer.clients[socket.id].playerId);
+        var isExecuted = games[socket.roomId].checkExecuteAction(action, games[socket.roomId].clients[socket.id].playerId);
         if (!isExecuted) {
             fn({
                 'synchronized': false,
-                'blocks': gameServer.blocks,
-                'players': gameServer.players
+                'blocks': games[socket.roomId].blocks,
+                'players': games[socket.roomId].players
             });
             return false;
         }
 
         // now check if game state is synchronized
-        if (gameServer.synchronized(blocks, players)) {
+        if (games[socket.roomId].synchronized(blocks, players)) {
             fn({'synchronized': true});
         } else {
             fn({
                 'synchronized': false,
-                'blocks': gameServer.blocks,
-                'players': gameServer.players
+                'blocks': games[socket.roomId].blocks,
+                'players': games[socket.roomId].players
             });
         }
         // emit new move to all other players (broadcast)
+        // for given room
         // we need to send player id and action to execute
         // for given player id
-        socket.broadcast.emit('new move', action, gameServer.blocks,
-            gameServer.players, gameServer.clients[socket.id].playerId);
+        socket.broadcast.to(socket.roomId).emit('new move', action, games[socket.roomId].blocks,
+            games[socket.roomId].players, games[socket.roomId].clients[socket.id].playerId);
     });
 
     // on disconnect remove user
-    socket.on('disconnect', function(){
-        gameServer.freePlayers.push(gameServer.clients[socket.id].playerId);
-        delete gameServer.clients[socket.id];
+    socket.on('disconnect', function() {
+        // free player from the current game
+        for (var roomId in socket.rooms) {
+            if (roomId != socket.id) {
+                games[roomId].freePlayers.push(gameServer.clients[socket.id].playerId);
+                delete games[roomId].clients[socket.id];
+            }
+        }
 
         console.log('user disconnected');
     });

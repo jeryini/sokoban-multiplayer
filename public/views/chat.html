@@ -1,9 +1,58 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
-    <title></title>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Sokoban</title>
+    <!-- css styles-->
+    <link rel="stylesheet" href="/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/stylesheets/style.css">
     <link rel="stylesheet" href="/stylesheets/sokoban.css">
+    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries-->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file>-->
   </head>
+  <!-- Navigation-->
+  <nav role="navigation" class="navbar navbar-inverse navbar-fixed-top">
+    <div class="container">
+      <!-- Brand and toggle get grouped for better mobile display-->
+      <div class="navbar-header"></div><a href="#" class="navbar-brand">Sokoban</a>
+      <!-- Collect the nav links, forms, and other content for toggling-->
+      <div id="bs-example-navbar-collapse-1" class="collapse navbar-collapse">
+        <ul class="nav navbar-nav">
+          <li><a href="#">About</a></li>
+          <li><a href="#">Contact</a></li>
+        </ul>
+      </div>
+      <!--/.navbar-collapse-->
+    </div>
+  </nav>
   <body>
+    <ul id="messages"></ul>
+    <form action="">
+      <input id="m" autocomplete="off">
+      <button>Send</button>
+    </form>
+    <script type="text/javascript">
+      var socket = io();
+      $('form').submit(function(){
+            // emit event message of type chat message
+            // with value of input with id m
+            socket.emit('chat message', $('#m').val());
+            $('#m').val('');
+            return false;
+        });
+        // on message receive
+        socket.on('chat message', function(msg) {
+            $('#messages').append($('<li>').text(msg));
+        });
+    </script>
   </body>
+  <!-- all of the JavaScript files that need to be-->
+  <!-- downloaded to the client-->
+  <script src="http://code.jquery.com/jquery-1.11.1.min.js"></script>
+  <script src="/bootstrap/js/bootstrap.min.js"></script>
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/javascripts/game.js"></script>
+  <script src="/javascripts/gameClient.js"></script>
 </html>

@@ -32,3 +32,8 @@
 #restart {
     margin-left: 500px;
 }
+#sokoban {
+    position: relative;
+    width: 400px;
+    height: 400px;
+}

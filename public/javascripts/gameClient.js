@@ -93,7 +93,7 @@ GameClient.prototype.checkExecuteAction = function(action) {
     // first draw our move on client
     game.drawMove(action, game.playerId);
 
-    // emit action to server and register a callback
+    // emit action to server for a current room and register a callback
     // on message acknowledge with server replaying
     // if this action is possible. Server replies with true
     // or false. When false it also returns the new state.
@@ -138,6 +138,9 @@ socket.on('starting state', function(gameState) {
     // create a new game client
     game = new GameClient();
 
+    // set the game room
+    game.roomId = gameState.roomId;
+
     // our player which the server assigned to us
     game.playerId = gameState.playerId;
 
@@ -180,4 +183,10 @@ socket.on('starting state', function(gameState) {
 $('form').submit(function(){
     socket.emit('restart');
     return false;
+});
+
+// handle button click for joining game room
+$('.room').click(function() {
+    // join the selected room
+    socket.emit('join', this.id);
 });
