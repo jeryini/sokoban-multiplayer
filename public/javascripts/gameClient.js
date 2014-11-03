@@ -133,6 +133,11 @@ socket.on('new move', function (action, blocks, players, playerId) {
     game.drawMove(action, playerId);
 });
 
+socket.on('new room', function (room) {
+    $("#rooms").append('<div id="' + room.roomId + '" class="list-group-item"><h4 class="list-group-item-heading">' + room.roomId
+        + '</h4><p class="list-group-item-text">We will play ' + room.levelId + '</p><a id="' + room.roomId + '" class="btn btn-sm btn-info room">Join</a></div>');
+});
+
 // on starting state receive current game state
 socket.on('starting state', function(gameState) {
     // create a new game client
@@ -180,13 +185,18 @@ socket.on('starting state', function(gameState) {
 });
 
 // restart the game
-$('form').submit(function(){
+$('#restart').click(function(){
     socket.emit('restart');
-    return false;
 });
 
 // handle button click for joining game room
 $('.room').click(function() {
     // join the selected room
     socket.emit('join', this.id);
+});
+
+// handle button click for creating game room
+$('#create').click(function() {
+    // join the selected room
+    socket.emit('create', $("#roomName").val(), $("#levelId").val(), "Test");
 });

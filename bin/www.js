@@ -25,19 +25,32 @@ io.on('connection', function(socket){
     // socket.io already assigns unique id to every socket
     console.log('a user connected with id: ' + socket.id);
 
+    // event for creating a room
+    socket.on('create', function(roomId, levelId, playerName) {
+        // create a new game
+        games[roomId] = new GameServer();
+        games[roomId].gameImage = levels[levelId];
+        games[roomId].createdAt = Date.now();
+        games[roomId].setGameStateFromImage();
+
+        // show the new room to all players, even the one
+        // who created it
+        io.sockets.emit('new room', {
+            roomId: roomId,
+            levelId: levelId,
+            createdAt: games[roomId].createdAt
+        });
+    });
+
     // event for joining a room
     socket.on('join', function(roomId) {
         // store the room in socket session
         socket.roomId = roomId;
 
-        // check for if game already exists for
-        // specified room id
-        if (!(roomId in games)) {
-            // does not exist, add it
-            games[roomId] = new GameServer();
-            games[roomId].gameImage = levels[2];
-            games[roomId].setGameStateFromImage();
-        }
+        games[roomId] = new GameServer();
+        games[roomId].gameImage = levels[2];
+        games[roomId].createdAt = Date.now();
+        games[roomId].setGameStateFromImage();
 
         // add client information to game server state
         games[roomId].clients[socket.id] = {
@@ -129,3 +142,5 @@ io.on('connection', function(socket){
         io.emit('restart', gameServer.blocks, gameServer.players);
     });
 });
+
+module.exports = games;

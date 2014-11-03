@@ -31,11 +31,23 @@
     <div class="container">
       <!--.rowbutton.btn.btn-lg.btn-primary(href="test", type="button") New multiplayer
       -->
-      <div id="sokoban"></div>
-      <form action="" id="restart">
-        <button class="btn btn-lg btn-danger">Restart</button>
-      </form>
-      <div class="list-group">
+      <div id="sokoban"></div><a id="restart" class="btn btn-lg btn-danger">Restart</a>
+      <!-- TODO: Do a proper POST on the server!-->
+      <div class="newGame">
+        <h2>New multiplayer game
+          <form role="form">
+            <div class="form-group">
+              <label for="roomName">Room name:</label>
+              <input id="roomName" type="text" placeholder="Enter room name" class="form-control">
+            </div>
+            <div class="form-group">
+              <label for="levelId">Level id:</label>
+              <input id="levelId" type="text" placeholder="Enter level id" class="form-control">
+            </div><a id="create" class="btn btn-lg btn-primary">Create</a>
+          </form>
+        </h2>
+      </div>
+      <div id="rooms" class="list-group">
         <div class="list-group-item active">
           <h4 class="list-group-item-heading">Game room 1</h4>
           <p class="list-group-item-text">Description of game room 1</p><a id="room1" class="btn btn-sm btn-info room">Join</a>
