@@ -46,20 +46,16 @@
             </div><a id="create" class="btn btn-lg btn-primary">Create</a>
           </form>
         </h2>
-      </div>
-      <div id="rooms" class="list-group">
-        <div class="list-group-item active">
-          <h4 class="list-group-item-heading">Game room 1</h4>
-          <p class="list-group-item-text">Description of game room 1</p><a id="room1" class="btn btn-sm btn-info room">Join</a>
-        </div>
-        <div id="room2" class="list-group-item">
-          <h4 class="list-group-item-heading">Game room 2</h4>
-          <p class="list-group-item-text">Description of game room 2</p><a id="room2" class="btn btn-sm btn-info room">Join</a>
-        </div>
-        <div id="room3" class="list-group-item">
-          <h4 class="list-group-item-heading">Game room 3</h4>
-          <p class="list-group-item-text">Description of game room 3</p><a id="room3" class="btn btn-sm btn-info room">Join</a>
-        </div>
+        <div id="rooms" class="list-group"></div>
+        <p></p>
+        <p></p>
+        <!--each room in rooms
+        //p= title
+        //.list-group-item.active
+        //  h4.list-group-item-heading//= room.roomId
+        //  p.list-group-item-text Description of game room 1
+        //  a.btn.btn-sm.btn-info.room#room1 Join
+        -->
       </div>
     </div>
     <!-- TODO: New Single player-->
@@ -75,4 +71,5 @@
   <script src="/socket.io/socket.io.js"></script>
   <script src="/javascripts/game.js"></script>
   <script src="/javascripts/gameClient.js"></script>
+  <script src="/javascripts/gameEvents.js"></script>
 </html>

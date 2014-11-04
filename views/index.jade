@@ -17,19 +17,12 @@ block content
             label(for='levelId') Level id:
             input#levelId.form-control(type='text', placeholder='Enter level id')
           a.btn.btn-lg.btn-primary#create Create
-    .list-group#rooms
-      .list-group-item.active
-        h4.list-group-item-heading Game room 1
-        p.list-group-item-text Description of game room 1
-        a.btn.btn-sm.btn-info.room#room1 Join
-      .list-group-item#room2
-        h4.list-group-item-heading Game room 2
-        p.list-group-item-text Description of game room 2
-        a.btn.btn-sm.btn-info.room#room2 Join
-      .list-group-item#room3
-        h4.list-group-item-heading Game room 3
-        p.list-group-item-text Description of game room 3
-        a.btn.btn-sm.btn-info.room#room3 Join
+      .list-group#rooms
+        each room in rooms
+          div(room.roomId).list-group-item
+            h4.list-group-item-heading= room.roomId
+            p.list-group-item-text Description of game room
+            a(room.roomId).btn.btn-sm.btn-info.room Join
   // TODO: New Single player
   // TODO: New Multiplayer: New game room!
   // TODO: Join multiplayer game: List game rooms!

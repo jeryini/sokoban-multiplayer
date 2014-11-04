@@ -29,6 +29,7 @@ io.on('connection', function(socket){
     socket.on('create', function(roomId, levelId, playerName) {
         // create a new game
         games[roomId] = new GameServer();
+        games[roomId].levelId = levelId;
         games[roomId].gameImage = levels[levelId];
         games[roomId].createdAt = Date.now();
         games[roomId].setGameStateFromImage();
@@ -38,7 +39,9 @@ io.on('connection', function(socket){
         io.sockets.emit('new room', {
             roomId: roomId,
             levelId: levelId,
-            createdAt: games[roomId].createdAt
+            playersIn: Object.keys(games[roomId].clients).length,
+            players: games[roomId].freePlayers.length +
+                Object.keys(games[roomId].clients).length
         });
     });
 
@@ -46,11 +49,6 @@ io.on('connection', function(socket){
     socket.on('join', function(roomId) {
         // store the room in socket session
         socket.roomId = roomId;
-
-        games[roomId] = new GameServer();
-        games[roomId].gameImage = levels[2];
-        games[roomId].createdAt = Date.now();
-        games[roomId].setGameStateFromImage();
 
         // add client information to game server state
         games[roomId].clients[socket.id] = {
@@ -70,6 +68,12 @@ io.on('connection', function(socket){
             blocks: games[roomId].blocks,
             placeholders: games[roomId].placeholders,
             players: games[roomId].players
+        });
+
+        // update the number of players in game
+        io.sockets.emit('update room', {
+            roomId: roomId,
+            playersIn: Object.keys(games[roomId].clients).length
         });
     });
 
