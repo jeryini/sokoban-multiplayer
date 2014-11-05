@@ -1,8 +1,12 @@
-/**
- * Created by Jernej on 17.10.2014.
- */
+var levels = require('../levels/levels');
+
+// we need the game client class as it will be
+// a prototype for our GameServer class
 var Game = require('../public/javascripts/game');
 
+
+
+// server side game object with additional fields
 var GameServer = function() {
     // image of the game state
     this.gameImage = [];
@@ -41,7 +45,7 @@ Game.prototype.checkExecuteAction = function(action, playerId) {
 // # are stones
 // $ are blocks
 // * are blocks on placeholder position
-Game.prototype.setGameStateFromImage = function() {
+GameServer.prototype.setGameStateFromImage = function() {
     // set appropriate functions for given character
     var setFunction = {
         '.': function(game, position) {
@@ -87,5 +91,17 @@ Game.prototype.setGameStateFromImage = function() {
     }
 };
 
+var createGameRoom = function(roomId, levelId, description, playerName) {
+    // create a new game room, where room id is the unique
+    // identifier
+    gameRooms[roomId] = new GameServer();
+    gameRooms[roomId].levelId = levelId;
+    gameRooms[roomId].gameImage = levels[levelId];
+    gameRooms[roomId].createdAt = Date.now();
+    gameRooms[roomId].setGameStateFromImage();
+
+    return gameRooms[roomId];
+};
+
 // TODO: Check for wraping in closure for hiding information!
-module.exports = GameServer;
+module.exports = createGameRoom;
