@@ -1,29 +1,40 @@
-/**
- * Created by Jernej on 5.11.2014.
- */
-// TODO: Each game room will have at given point in time only one game, but
-// TODO: at different times it will be able to have different games.
+var User = require('./user');
+var Player = require('./player');
+var GameServer = require('./gameServer');
 
 // a hash array that will hold games
 // in progress for each room. Key is the id of the room.
 var gameRooms = {};
 
-var GameRoom = function(roomId, levelId, description, ownerId) {
+var GameRoom = function(roomId, levelId, description, socketId) {
     // id of the room
     this.roomId = roomId;
+
+    // create a game for specified level
+    this.gameServer = new GameServer(levelId);
 
     // description of the room
     this.description = description;
 
-    // id of the creator
-    this.ownerId = ownerId;
+    this.clients = {};
 
-    // create a new game
-    // create a new game room, where room id is the unique
-    // identifier
-    // TODO: Creating new game server here or in gameServer script?
-    gameServer = new GameServer();
-    gameServer.gameImage = levels[levelId];
-    gameRooms[roomId].createdAt = Date.now();
-    gameRooms[roomId].setGameStateFromImage();
+    // id of the creator
+    this.owner = this.join(socketId);
+};
+
+// create a new player, save it and return it
+GameRoom.prototype.join = function(socketId) {
+    // pop the first available player. If the player is not
+    // available, then it will get undefined, which is fine
+    // the player is connected to the client via socket id and
+    // with the in game player via player id
+    var player = new Player(socketId, this.gameServer.freePlayers.pop());
+    this.clients[socketId] = player;
+    return player;
+};
+
+// export the game rooms currently underway on server
+module.exports = {
+    gameRooms: gameRooms,
+    GameRoom: GameRoom
 };

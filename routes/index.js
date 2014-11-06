@@ -3,7 +3,16 @@ var router = express.Router();
 
 /* GET home page. */
 router.get('/', function(req, res) {
-    var games = require('../bin/www');
+    // get all current rooms on the server
+    var rooms = require('../logic/gameRoom');
+
+    // some test data
+    var rooms = new Array({
+        roomId: "Test",
+        levelId: 2,
+        playersIn: 1,
+        players: 2
+    });
 
     for (var roomId in games) {
         rooms.push({

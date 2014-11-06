@@ -1,14 +1,20 @@
 extends layout
 
 block content
-  div.container
-    //.row
-      button.btn.btn-lg.btn-primary(href="test", type="button") New multiplayer
-    #sokoban
-    a.btn.btn-lg.btn-danger#restart Restart
-    // TODO: Do a proper POST on the server!
-    .newGame
-      h2 New multiplayer game
+  // TODO: Check styling!
+  .container
+    .row
+      .col-xs-10#rooms
+        .list-group
+          each room in rooms
+            div(room.roomId).list-group-item
+              h4.list-group-item-heading= room.roomId
+              p.list-group-item-text= room.description
+              p.list-group-item-text Chosen level id: #{room.levelId}
+              p.list-group-item-text Players: #span#playersIn #{room.playersIn}/#{room.players}
+              a(room.roomId).btn.btn-sm.btn-info.room Join
+      .col-xs-2#newRoom
+        h2 New multiplayer game
         form(role='form')
           .form-group
             label(for='roomName') Room name:
@@ -17,15 +23,3 @@ block content
             label(for='levelId') Level id:
             input#levelId.form-control(type='text', placeholder='Enter level id')
           a.btn.btn-lg.btn-primary#create Create
-      .list-group#rooms
-        each room in rooms
-          div(room.roomId).list-group-item
-            h4.list-group-item-heading= room.roomId
-            p.list-group-item-text Description of game room
-            a(room.roomId).btn.btn-sm.btn-info.room Join
-  // TODO: New Single player
-  // TODO: New Multiplayer: New game room!
-  // TODO: Join multiplayer game: List game rooms!
-  // TODO: Server side logic for implementing the game room?
-  // TODO: Namespaces?
-

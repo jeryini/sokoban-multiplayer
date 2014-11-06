@@ -4,18 +4,21 @@ var levels = require('../levels/levels');
 // a prototype for our GameServer class
 var Game = require('../public/javascripts/game');
 
-
-
 // server side game object with additional fields
-var GameServer = function() {
+var GameServer = function(levelId) {
+    this.createdAt = Date.now();
     // image of the game state
-    this.gameImage = [];
+    this.gameImage = levels[levelId];
+
+    // players in game
+    this.players = {};
 
     // available players
     this.freePlayers = [];
 
-    // data for each client
-    this.clients = {};
+    // set the game state from image
+    // TODO: Do not store the game image inside every game server!
+    this.setGameStateFromImage();
 };
 
 // set the prototype to the main class
@@ -104,4 +107,4 @@ var createGameRoom = function(roomId, levelId, description, playerName) {
 };
 
 // TODO: Check for wraping in closure for hiding information!
-module.exports = createGameRoom;
+module.exports = GameServer;

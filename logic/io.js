@@ -1,4 +1,4 @@
-var createGameRoom = require('./gameServer');
+var GameRoom = require('./gameRoom').GameRoom;
 
 // initialize socket without server arg!
 var io = require('socket.io')();
@@ -10,16 +10,15 @@ io.on('connection', function(socket){
     // socket.io already assigns unique id to every socket
     console.log('a user connected with id: ' + socket.id);
 
-    // TODO: Finish moving the logic from io to gameServer for
-    // TODO: creating game and for creating game rooms.
     // event for creating a room
     // the following attributes are passed:
     // roomId
     // levelId
     // description
     // playerName
-    socket.on('create', function(roomId, levelId, description, playerName) {
-        var gameRoom = createGameRoom(roomId, levelId, description, playerName);
+    socket.on('create', function(roomId, levelId, description, playerId) {
+        // create a new game room
+        var gameRoom = new GameRoom(roomId, levelId, description, playerId, socket.Id);
 
         // show the new room to all players, even the one
         // who created it
@@ -35,10 +34,12 @@ io.on('connection', function(socket){
     // event for joining a room
     socket.on('join', function(roomId) {
         // store the room in socket session
+        // TODO: Do we need to store room id in socket?
         socket.roomId = roomId;
 
         // add client information to game server state
         games[roomId].clients[socket.id] = {
+            // TODO: We stored socket. Do we need it?
             socket: socket,
             // assign one of the available players
             playerId: games[roomId].freePlayers.pop()
@@ -127,7 +128,6 @@ io.on('connection', function(socket){
         io.emit('restart', gameServer.blocks, gameServer.players);
     });
 });
-
 
 module.exports = io;
 

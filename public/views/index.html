@@ -4,6 +4,7 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- ensure proper rendering and touch zooming on mobile devices-->
     <title>Sokoban</title>
     <!-- css styles-->
     <link rel="stylesheet" href="/bootstrap/css/bootstrap.min.css">
@@ -28,41 +29,6 @@
     </div>
   </nav>
   <body>
-    <div class="container">
-      <!--.rowbutton.btn.btn-lg.btn-primary(href="test", type="button") New multiplayer
-      -->
-      <div id="sokoban"></div><a id="restart" class="btn btn-lg btn-danger">Restart</a>
-      <!-- TODO: Do a proper POST on the server!-->
-      <div class="newGame">
-        <h2>New multiplayer game
-          <form role="form">
-            <div class="form-group">
-              <label for="roomName">Room name:</label>
-              <input id="roomName" type="text" placeholder="Enter room name" class="form-control">
-            </div>
-            <div class="form-group">
-              <label for="levelId">Level id:</label>
-              <input id="levelId" type="text" placeholder="Enter level id" class="form-control">
-            </div><a id="create" class="btn btn-lg btn-primary">Create</a>
-          </form>
-        </h2>
-        <div id="rooms" class="list-group"></div>
-        <p></p>
-        <p></p>
-        <!--each room in rooms
-        //p= title
-        //.list-group-item.active
-        //  h4.list-group-item-heading//= room.roomId
-        //  p.list-group-item-text Description of game room 1
-        //  a.btn.btn-sm.btn-info.room#room1 Join
-        -->
-      </div>
-    </div>
-    <!-- TODO: New Single player-->
-    <!-- TODO: New Multiplayer: New game room!-->
-    <!-- TODO: Join multiplayer game: List game rooms!-->
-    <!-- TODO: Server side logic for implementing the game room?-->
-    <!-- TODO: Namespaces?-->
   </body>
   <!-- all of the JavaScript files that need to be-->
   <!-- downloaded to the client-->
