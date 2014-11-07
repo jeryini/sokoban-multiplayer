@@ -96,17 +96,5 @@ GameServer.prototype.setGameStateFromImage = function() {
     }
 };
 
-var createGameRoom = function(roomId, levelId, description, playerName) {
-    // create a new game room, where room id is the unique
-    // identifier
-    gameRooms[roomId] = new GameServer();
-    gameRooms[roomId].levelId = levelId;
-    gameRooms[roomId].gameImage = levels[levelId];
-    gameRooms[roomId].createdAt = Date.now();
-    gameRooms[roomId].setGameStateFromImage();
-
-    return gameRooms[roomId];
-};
-
 // TODO: Check for wraping in closure for hiding information!
 module.exports = GameServer;

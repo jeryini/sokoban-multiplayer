@@ -1,81 +1,84 @@
-// socket event for creation of new game room
+/**
+ * Socket event for creation of new game room
+ */
 socket.on('newGameRoom', function (data) {
     // TODO: How to replace hard coded HTML code?
     $("#gameRooms").append('<div id="' + data.roomId + '" class="list-group-item"><h4 class="list-group-item-heading">' + data.roomId
         + '</h4><p class="list-group-item-text">' + data.description + '</p><p class="list-group-item-text">Chosen level: ' + data.levelId + '</p><p class="list-group-item-text">Players: <span id="playersIn">' + data.playersIn + '</span>/' + data.allPlayers + '</p><a id="' + data.roomId + '" class="btn btn-sm btn-info room">Join</a></div>');
 });
 
-// on starting state receive current game state
+/**
+ * On starting state receive current game state.
+ */
 socket.on('gameServerState', function(gameState) {
     // create a new game client
-    game = new GameClient();
+    gameClient = new GameClient();
 
     // set the game room
-    game.roomId = gameState.roomId;
+    gameClient.roomId = gameState.roomId;
 
     // our player which the server assigned to us
-    game.playerId = gameState.playerId;
+    gameClient.playerId = gameState.playerId;
 
     // state of the game
-    game.stones = gameState.stones;
-    game.blocks = gameState.blocks;
-    game.placeholders = gameState.placeholders;
-    game.players = gameState.players;
+    gameClient.stones = gameState.stones;
+    gameClient.blocks = gameState.blocks;
+    gameClient.placeholders = gameState.placeholders;
+    gameClient.players = gameState.players;
 
-    // when DOM is fully loaded draw game state
+    // when DOM is fully loaded draw the game state
     $(document).ready(function() {
         // draw game from game state
-        game.drawGame();
+        gameClient.drawGame();
 
         // event handler for keyboard events
         $(document).keydown(function (event) {
             switch (event.keyCode) {
                 // key press a
                 case 65:
-                    game.checkExecuteAction("left", game.playerId);
+                    gameClient.checkExecuteAction("left");
                     break;
                 // key press w
                 case 87:
-                    game.checkExecuteAction("up", game.playerId);
+                    gameClient.checkExecuteAction("up");
                     break;
                 // key press d
                 case 68:
-                    game.checkExecuteAction("right", game.playerId);
+                    gameClient.checkExecuteAction("right");
                     break;
                 // key press s
                 case 83:
-                    game.checkExecuteAction("down", game.playerId);
+                    gameClient.checkExecuteAction("down");
                     break;
             }
         });
     });
 });
 
-socket.on('restart', function (blocks, players) { // TIP: you can avoid listening on `connect` and listen on events directly too!
-    game.blocks = blocks;
-    game.players = players;
-
-    // redraw game
-    game.drawGame();
+/**
+ * Update the number of players in game.
+ */
+socket.on('updatePlayersIn', function (data) {
+    $("#" + data.roomId + " #playersIn").text(data.playersIn);
 });
 
-socket.on('new move', function (action, blocks, players, playerId) {
-    game.blocks = blocks;
-    game.players = players;
-    action = game.actions[action];
+socket.on('restart', function (blocks, players) { // TIP: you can avoid listening on `connect` and listen on events directly too!
+    gameClient.blocks = blocks;
+    gameClient.players = players;
+
+    // redraw game
+    gameClient.drawGame();
+});
+
+socket.on('newMove', function (action, blocks, players, playerId) {
+    gameClient.blocks = blocks;
+    gameClient.players = players;
+    action = gameClient.actions[action];
 
     // animate player movement for given action
     // and player id
-    game.drawMove(action, playerId);
+    gameClient.drawMove(action, playerId);
 });
-
-
-
-socket.on('update room', function (room) {
-    $("#" + room.roomId + " #playersIn").text(room.playersIn);
-});
-
-
 
 // handle button click for creating game room
 $('#create-game-room').click(function() {
@@ -94,8 +97,8 @@ $('#restart').click(function(){
 });
 
 // handle button click for joining game room
-$('#rooms').on("click", "a", function() {
+$('#gameRooms').on("click", "a", function() {
     // join the selected room
-    socket.emit('join', this.id);
+    socket.emit('joinGameRoom', this.id);
 });
 

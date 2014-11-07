@@ -20,6 +20,9 @@ var GameRoom = function(roomId, levelId, description, userId, socketId) {
 
     // id of the creator
     this.owner = this.joinGameRoom(userId, socketId);
+
+    // add game room to current game rooms
+    gameRooms[this.roomId] = this;
 };
 
 /**

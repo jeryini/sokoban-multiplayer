@@ -1,6 +1,8 @@
 // create socket for bidirectional communication
 var socket = io();
-var game;
+
+// represents our current game
+var gameClient;
 
 // object that represents game state
 var GameClient = function() {};
@@ -10,18 +12,18 @@ GameClient.prototype = new Game();
 
 GameClient.prototype.drawGame = function() {
     $("#sokoban").empty();
-    for (var i in game.stones) {
-        $("#sokoban").append('<div class = "stone" style = "top:' + game.stones[i][1] * 32 + 'px;left:' + game.stones[i][0] * 32 + 'px"></div>');
+    for (var i in this.stones) {
+        $("#sokoban").append('<div class = "stone" style = "top:' + this.stones[i][1] * 32 + 'px;left:' + this.stones[i][0] * 32 + 'px"></div>');
     }
-    for (var i in game.blocks) {
-        $("#sokoban").append('<div id = "b' + game.blocks[i][0] + '_' + game.blocks[i][1] + '" class = "block" style = "z-index:1000;top:' + game.blocks[i][1] * 32 + 'px;left:' + game.blocks[i][0] * 32 + 'px"></div>');
+    for (var i in this.blocks) {
+        $("#sokoban").append('<div id = "b' + this.blocks[i][0] + '_' + this.blocks[i][1] + '" class = "block" style = "z-index:1000;top:' + this.blocks[i][1] * 32 + 'px;left:' + this.blocks[i][0] * 32 + 'px"></div>');
     }
-    for (var i in game.placeholders) {
-        $("#sokoban").append('<div class = "placeholder" style = "top:' + game.placeholders[i][1] * 32 + 'px;left:' + game.placeholders[i][0] * 32 + 'px"></div>');
+    for (var i in this.placeholders) {
+        $("#sokoban").append('<div class = "placeholder" style = "top:' + this.placeholders[i][1] * 32 + 'px;left:' + this.placeholders[i][0] * 32 + 'px"></div>');
     }
-    for (var i in game.players) {
-        if (typeof game.players[i][1] !== "undefined")
-            $("#sokoban").append('<div id ="p' + game.players[i][0] + '_' + game.players[i][1] + '" class = "player" style = "z-index:1000;top:' + game.players[i][1] * 32 + 'px;left:' + game.players[i][0] * 32 + 'px"></div>');
+    for (var i in this.players) {
+        if (typeof this.players[i][1] !== "undefined")
+            $("#sokoban").append('<div id ="p' + this.players[i][0] + '_' + this.players[i][1] + '" class = "player" style = "z-index:1000;top:' + this.players[i][1] * 32 + 'px;left:' + this.players[i][0] * 32 + 'px"></div>');
     }
 };
 
@@ -31,40 +33,40 @@ GameClient.prototype.redrawGame = function() {
     $(".player").remove();
 
     // then redraw those two
-    for (var i in game.blocks) {
-        $("#sokoban").append('<div id = "b' + game.blocks[i][0] + '_' + game.blocks[i][1] + '" class = "block" style = "z-index:1000;top:' + game.blocks[i][1] * 32 + 'px;left:' + game.blocks[i][0] * 32 + 'px"></div>');
+    for (var i in this.blocks) {
+        $("#sokoban").append('<div id = "b' + this.blocks[i][0] + '_' + this.blocks[i][1] + '" class = "block" style = "z-index:1000;top:' + this.blocks[i][1] * 32 + 'px;left:' + this.blocks[i][0] * 32 + 'px"></div>');
     }
-    for (var i in game.players) {
-        if (typeof game.players[i][1] !== "undefined")
-            $("#sokoban").append('<div id ="p' + game.players[i][0] + '_' + game.players[i][1] + '" class = "player" style = "z-index:1000;top:' + game.players[i][1] * 32 + 'px;left:' + game.players[i][0] * 32 + 'px"></div>');
+    for (var i in this.players) {
+        if (typeof this.players[i][1] !== "undefined")
+            $("#sokoban").append('<div id ="p' + this.players[i][0] + '_' + this.players[i][1] + '" class = "player" style = "z-index:1000;top:' + this.players[i][1] * 32 + 'px;left:' + this.players[i][0] * 32 + 'px"></div>');
     }
 };
 
 GameClient.prototype.drawMove = function(action, playerId) {
     // first check for movement of other player
     // (if pushed by our player)
-    $("#p" + game.players[playerId][0] + "_" +
-        game.players[playerId][1]).animate({
+    $("#p" + this.players[playerId][0] + "_" +
+        this.players[playerId][1]).animate({
         left: "+=" + (action[0] * 32),
         top: "+=" + (action[1] * 32)
-    }, 100).attr("id","p"+(game.players[playerId][0] + action[0]) +
-        "_" + (game.players[playerId][1] + action[1]));
+    }, 100).attr("id","p"+(this.players[playerId][0] + action[0]) +
+        "_" + (this.players[playerId][1] + action[1]));
 
     // movement of our player
-    $("#p" + (game.players[playerId][0] - action[0]) + "_" +
-        (game.players[playerId][1] - action[1])).animate({
+    $("#p" + (this.players[playerId][0] - action[0]) + "_" +
+        (this.players[playerId][1] - action[1])).animate({
         left: "+=" + (action[0] * 32),
         top: "+=" + (action[1] * 32)
-    }, 100).attr("id","p"+game.players[playerId][0] +
-        "_" + game.players[playerId][1]);
+    }, 100).attr("id","p"+this.players[playerId][0] +
+        "_" + this.players[playerId][1]);
 
     // movement of block (if pushed by our player)
-    $("#b" + game.players[playerId][0] + "_" +
-        game.players[playerId][1]).animate({
+    $("#b" + this.players[playerId][0] + "_" +
+        this.players[playerId][1]).animate({
         left: "+=" + (action[0] * 32),
         top: "+=" + (action[1] * 32)
-    }, 100).attr("id","b"+(game.players[playerId][0] + action[0]) +
-        "_" + (game.players[playerId][1] + action[1]));
+    }, 100).attr("id","b"+(this.players[playerId][0] + action[0]) +
+        "_" + (this.players[playerId][1] + action[1]));
 };
 
 // execute given action from the given player id
@@ -87,26 +89,27 @@ GameClient.prototype.checkExecuteAction = function(action) {
     }
 
     // first draw our move on client
-    game.drawMove(action, game.playerId);
+    this.drawMove(action, this.playerId);
 
-    // emit action to server for a current room and register a callback
-    // on message acknowledge with server replaying
-    // if this action is possible. Server replies with true
-    // or false. When false it also returns the new state.
-    socket.emit('execute action', actionName, this.blocks, this.players, function(response) {
+    /**
+     * Emit action to server for a current room and register a callback
+     * on message acknowledge with server replaying if this action is possible.
+     * Server replies with true or false. When false it also returns the new state.
+     */
+    socket.emit('executeAction', actionName, this.blocks, this.players, function(response) {
         // check if state is synchronized (client state matches server state)
         if (!response.synchronized) {
             // set current state from the server state
-            game.blocks = response.blocks;
-            game.players = response.players;
+            this.blocks = response.blocks;
+            this.players = response.players;
 
             // redraw game state because state is not synchronized
-            game.redrawGame();
+            this.redrawGame();
         }
     });
 
     // check if solved
-    if (game.solved()) {
+    if (this.solved()) {
         $('#messages').append($('<li>').text("SOLVED!"));
     }
 };

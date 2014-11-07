@@ -29,7 +29,19 @@ io.on('connection', function(socket){
         // also pass in socket id of the creator
         var gameRoom = new GameRoom(roomId, levelId, description, userId, socket.id);
 
-        // TODO: we should send to the creator a starting state
+        // join the room on socket level
+        socket.join(roomId);
+        socket.roomId = roomId;
+
+        // send starting state to the creator
+        socket.emit('gameServerState', {
+            roomId: roomId,
+            playerId: gameRoom.owner.playerId,
+            stones: gameRoom.gameServer.stones,
+            blocks: gameRoom.gameServer.blocks,
+            placeholders: gameRoom.gameServer.placeholders,
+            players: gameRoom.gameServer.players
+        });
 
         // show the new room to all players, even the one
         // who created it
@@ -46,40 +58,52 @@ io.on('connection', function(socket){
      * Event for joining a game room.
      */
     socket.on('joinGameRoom', function(roomId) {
-        // store the room in socket session
-        // TODO: Do we need to store room id in socket?
-        //socket.roomId = roomId;
         // first we need to get the game room from the passed id
         var gameRoom = getGameRoom(roomId);
 
         // join the client, which also returns a new player
         var player = gameRoom.joinGameRoom('Test', socket.id);
 
-        // join the passed room
+        // join the room on socket level
         socket.join(roomId);
+        socket.roomId = roomId;
 
-        // send starting state to user
+        /**
+         * Send starting state to user.
+         */
         socket.emit('gameServerState', {
             roomId: roomId,
-            playerId: games[roomId].clients[socket.id].playerId,
-            stones: games[roomId].stones,
-            blocks: games[roomId].blocks,
-            placeholders: games[roomId].placeholders,
-            players: games[roomId].players
+            playerId: player.playerId,
+            stones: gameRoom.gameServer.stones,
+            blocks: gameRoom.gameServer.blocks,
+            placeholders: gameRoom.gameServer.placeholders,
+            players: gameRoom.gameServer.players
         });
 
-        // update the number of players in game
-        io.sockets.emit('update room', {
+        /**
+         * Update the number of players in game.
+         */
+        io.sockets.emit('updatePlayersIn', {
             roomId: roomId,
-            playersIn: Object.keys(games[roomId].clients).length
+            playersIn: Object.keys(gameRoom.gameServer.players).length -
+                gameRoom.gameServer.freePlayers.length
         });
     });
 
-    // event for executing a action, where action can be:
-    // up, down, left, right
-    // and a function to callback to client side
-    socket.on('execute action', function(action, blocks, players, fn) {
+    /**
+     * Event for executing a action, where action can be:
+     * - up
+     * - down
+     * - left
+     * - right
+     *
+     * We also get passed in a callback function from client.
+     */
+    socket.on('executeAction', function(action, blocks, players, fn) {
         console.log('action executed:', action, 'from user', socket.id);
+
+        // first we need to get game room of the socket
+        var gameRoom = getGameRoom(socket.roomId);
 
         // execute given action on server. If the action is
         // not executable it immediately returns current game state
@@ -87,32 +111,32 @@ io.on('connection', function(socket){
         // is synchronized as the action should be executable if client
         // send it to the server (it implicitly means that the state
         // does not match).
-        var isExecuted = games[socket.roomId].checkExecuteAction(action, games[socket.roomId].clients[socket.id].playerId);
+        var isExecuted = gameRoom.gameServer.checkExecuteAction(action, gameRoom.clients[socket.id].playerId);
         if (!isExecuted) {
             fn({
                 'synchronized': false,
-                'blocks': games[socket.roomId].blocks,
-                'players': games[socket.roomId].players
+                'blocks': gameRoom.gameServer.blocks,
+                'players': gameRoom.gameServer.players
             });
             return false;
         }
 
         // now check if game state is synchronized
-        if (games[socket.roomId].synchronized(blocks, players)) {
+        if (gameRoom.gameServer.synchronized(blocks, players)) {
             fn({'synchronized': true});
         } else {
             fn({
                 'synchronized': false,
-                'blocks': games[socket.roomId].blocks,
-                'players': games[socket.roomId].players
+                'blocks': gameRoom.gameServer.blocks,
+                'players': gameRoom.gameServer.players
             });
         }
         // emit new move to all other players (broadcast)
         // for given room
         // we need to send player id and action to execute
         // for given player id
-        socket.broadcast.to(socket.roomId).emit('new move', action, games[socket.roomId].blocks,
-            games[socket.roomId].players, games[socket.roomId].clients[socket.id].playerId);
+        socket.broadcast.to(socket.roomId).emit('newMove', action, gameRoom.gameServer.blocks,
+            gameRoom.gameServer.players, gameRoom.clients[socket.id].playerId);
     });
 
     // event when user disconnects
