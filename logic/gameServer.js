@@ -7,7 +7,9 @@ var Game = require('../public/javascripts/game');
 // server side game object with additional fields
 var GameServer = function(levelId) {
     this.createdAt = Date.now();
+
     // image of the game state
+    this.levelId = levelId;
     this.gameImage = levels[levelId];
 
     // players in game

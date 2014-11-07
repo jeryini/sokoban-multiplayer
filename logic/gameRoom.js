@@ -6,7 +6,7 @@ var GameServer = require('./gameServer');
 // in progress for each room. Key is the id of the room.
 var gameRooms = {};
 
-var GameRoom = function(roomId, levelId, description, socketId) {
+var GameRoom = function(roomId, levelId, description, userId, socketId) {
     // id of the room
     this.roomId = roomId;
 
@@ -19,22 +19,34 @@ var GameRoom = function(roomId, levelId, description, socketId) {
     this.clients = {};
 
     // id of the creator
-    this.owner = this.join(socketId);
+    this.owner = this.joinGameRoom(userId, socketId);
 };
 
-// create a new player, save it and return it
-GameRoom.prototype.join = function(socketId) {
+/**
+ * Create a new player, save it and return it
+ */
+GameRoom.prototype.joinGameRoom = function(userId, socketId) {
     // pop the first available player. If the player is not
     // available, then it will get undefined, which is fine
     // the player is connected to the client via socket id and
     // with the in game player via player id
-    var player = new Player(socketId, this.gameServer.freePlayers.pop());
+    var player = new Player(userId, socketId, this.gameServer.freePlayers.pop());
     this.clients[socketId] = player;
     return player;
+};
+
+/**
+ * Get the game room from the current games on the server.
+ *
+ * @param roomId
+ */
+var getGameRoom = function(roomId) {
+    return gameRooms[roomId];
 };
 
 // export the game rooms currently underway on server
 module.exports = {
     gameRooms: gameRooms,
-    GameRoom: GameRoom
+    GameRoom: GameRoom,
+    getGameRoom: getGameRoom
 };

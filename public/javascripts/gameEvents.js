@@ -1,32 +1,12 @@
-socket.on('restart', function (blocks, players) { // TIP: you can avoid listening on `connect` and listen on events directly too!
-    game.blocks = blocks;
-    game.players = players;
-
-    // redraw game
-    game.drawGame();
-});
-
-socket.on('new move', function (action, blocks, players, playerId) {
-    game.blocks = blocks;
-    game.players = players;
-    action = game.actions[action];
-
-    // animate player movement for given action
-    // and player id
-    game.drawMove(action, playerId);
-});
-
-socket.on('new room', function (room) {
-    $("#rooms").append('<div id="' + room.roomId + '" class="list-group-item"><h4 class="list-group-item-heading">' + room.roomId
-        + '</h4><p class="list-group-item-text">Chosen level id: ' + room.levelId + '</p><p>Players: <span id="playersIn">' + room.playersIn + '</span>/' + room.players + '</p></p><a id="' + room.roomId + '" class="btn btn-sm btn-info room">Join</a></div>');
-});
-
-socket.on('update room', function (room) {
-    $("#" + room.roomId + " #playersIn").text(room.playersIn);
+// socket event for creation of new game room
+socket.on('newGameRoom', function (data) {
+    // TODO: How to replace hard coded HTML code?
+    $("#gameRooms").append('<div id="' + data.roomId + '" class="list-group-item"><h4 class="list-group-item-heading">' + data.roomId
+        + '</h4><p class="list-group-item-text">' + data.description + '</p><p class="list-group-item-text">Chosen level: ' + data.levelId + '</p><p class="list-group-item-text">Players: <span id="playersIn">' + data.playersIn + '</span>/' + data.allPlayers + '</p><a id="' + data.roomId + '" class="btn btn-sm btn-info room">Join</a></div>');
 });
 
 // on starting state receive current game state
-socket.on('starting state', function(gameState) {
+socket.on('gameServerState', function(gameState) {
     // create a new game client
     game = new GameClient();
 
@@ -71,6 +51,43 @@ socket.on('starting state', function(gameState) {
     });
 });
 
+socket.on('restart', function (blocks, players) { // TIP: you can avoid listening on `connect` and listen on events directly too!
+    game.blocks = blocks;
+    game.players = players;
+
+    // redraw game
+    game.drawGame();
+});
+
+socket.on('new move', function (action, blocks, players, playerId) {
+    game.blocks = blocks;
+    game.players = players;
+    action = game.actions[action];
+
+    // animate player movement for given action
+    // and player id
+    game.drawMove(action, playerId);
+});
+
+
+
+socket.on('update room', function (room) {
+    $("#" + room.roomId + " #playersIn").text(room.playersIn);
+});
+
+
+
+// handle button click for creating game room
+$('#create-game-room').click(function() {
+    // send a event to create new game room
+    socket.emit('createGameRoom',
+        $("#game-room-name").val(),
+        $("#game-room-description").val(),
+        $("#game-server-level").val(),
+        $("#player-name").val()
+    );
+});
+
 // restart the game
 $('#restart').click(function(){
     socket.emit('restart');
@@ -82,8 +99,3 @@ $('#rooms').on("click", "a", function() {
     socket.emit('join', this.id);
 });
 
-// handle button click for creating game room
-$('#create').click(function() {
-    // join the selected room
-    socket.emit('create', $("#roomName").val(), $("#levelId").val(), "Test");
-});

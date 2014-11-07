@@ -1,55 +1,65 @@
 var GameRoom = require('./gameRoom').GameRoom;
+var getGameRoom = require('./gameRoom').getGameRoom;
 
 // initialize socket without server arg!
 var io = require('socket.io')();
 
 // listen on connection events for incoming socket
 // this fires every time new client connects
+/**
+ * Represents a connection events for incoming socket.
+ * It fires every time a new client connects.
+ *
+ * @event SocketIO#connection
+ * @param socket
+ */
 io.on('connection', function(socket){
-    /****** Events from users *************/
+    /**************** Events from users ****************/
     // socket.io already assigns unique id to every socket
     console.log('a user connected with id: ' + socket.id);
 
-    // event for creating a room
-    // the following attributes are passed:
-    // roomId
-    // levelId
-    // description
-    // playerName
-    socket.on('create', function(roomId, levelId, description, playerId) {
+    /**
+     * Event from client for creating a room.
+     *
+     * @event SocketIO#createRoom
+     * @param roomId, levelId, description, playerId
+     */
+    socket.on('createGameRoom', function(roomId, description, levelId, userId) {
         // create a new game room
-        var gameRoom = new GameRoom(roomId, levelId, description, playerId, socket.Id);
+        // also pass in socket id of the creator
+        var gameRoom = new GameRoom(roomId, levelId, description, userId, socket.id);
+
+        // TODO: we should send to the creator a starting state
 
         // show the new room to all players, even the one
         // who created it
-        io.sockets.emit('new room', {
+        io.sockets.emit('newGameRoom', {
             roomId: roomId,
-            levelId: gameRoom.levelId,
-            playersIn: Object.keys(gameRoom.clients).length,
-            players: gameRoom.freePlayers.length +
-                Object.keys(gameRoom.clients).length
+            levelId: gameRoom.gameServer.levelId,
+            playersIn: Object.keys(gameRoom.gameServer.players).length -
+                gameRoom.gameServer.freePlayers.length,
+            allPlayers: Object.keys(gameRoom.gameServer.players).length
         });
     });
 
-    // event for joining a room
-    socket.on('join', function(roomId) {
+    /**
+     * Event for joining a game room.
+     */
+    socket.on('joinGameRoom', function(roomId) {
         // store the room in socket session
         // TODO: Do we need to store room id in socket?
-        socket.roomId = roomId;
+        //socket.roomId = roomId;
+        // first we need to get the game room from the passed id
+        var gameRoom = getGameRoom(roomId);
 
-        // add client information to game server state
-        games[roomId].clients[socket.id] = {
-            // TODO: We stored socket. Do we need it?
-            socket: socket,
-            // assign one of the available players
-            playerId: games[roomId].freePlayers.pop()
-        };
+        // join the client, which also returns a new player
+        var player = gameRoom.joinGameRoom('Test', socket.id);
 
         // join the passed room
         socket.join(roomId);
 
-        // send game object to user
-        socket.emit('starting state', {
+        // send starting state to user
+        socket.emit('gameServerState', {
             roomId: roomId,
             playerId: games[roomId].clients[socket.id].playerId,
             stones: games[roomId].stones,

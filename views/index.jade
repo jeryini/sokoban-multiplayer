@@ -1,25 +1,32 @@
 extends layout
 
 block content
-  // TODO: Check styling!
   .container
     .row
-      .col-xs-10#rooms
-        .list-group
-          each room in rooms
-            div(room.roomId).list-group-item
-              h4.list-group-item-heading= room.roomId
-              p.list-group-item-text= room.description
-              p.list-group-item-text Chosen level id: #{room.levelId}
-              p.list-group-item-text Players: #span#playersIn #{room.playersIn}/#{room.players}
-              a(room.roomId).btn.btn-sm.btn-info.room Join
-      .col-xs-2#newRoom
+      .col-xs-10
+        .list-group#gameRooms
+          each gameRoom in gameRooms
+            div(id=gameRoom.roomId).list-group-item
+              h4.list-group-item-heading= gameRoom.roomId
+              p.list-group-item-text= gameRoom.description
+              p.list-group-item-text Chosen level: #{gameRoom.levelId}
+              p.list-group-item-text Players:
+                span#players-in #{gameRoom.playersIn}
+                /#{gameRoom.allPlayers}
+              a(id=gameRoom.roomId).btn.btn-sm.btn-info.room Join
+      .col-xs-2#new-game-room
         h2 New multiplayer game
         form(role='form')
           .form-group
-            label(for='roomName') Room name:
-            input#roomName.form-control(type='text', placeholder='Enter room name')
+            label(for='game-room-name') Game room name:
+            input#game-room-name.form-control(type='text', placeholder='Enter game room name', value="Game room 4")
           .form-group
-            label(for='levelId') Level id:
-            input#levelId.form-control(type='text', placeholder='Enter level id')
-          a.btn.btn-lg.btn-primary#create Create
+            label(for='game-room-description') Game room description:
+            input#game-room-description.form-control(type='text', placeholder='Enter game room description', value="This is game room 4.")
+          .form-group
+            label(for='game-server-level') Level id:
+            input#game-server-level.form-control(type='text', placeholder='Enter game level', value="2")
+          .form-group
+            label(for='player-name') Player name:
+            input#player-name.form-control(type='text', placeholder='Enter player name', value="Jernej")
+          a.btn.btn-lg.btn-primary#create-game-room Create
