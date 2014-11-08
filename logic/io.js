@@ -172,8 +172,14 @@ io.on('connection', function(socket){
             // if owner is still undefined, then there is no player left,
             // delete the room
             if (gameRoom.owner === undefined) {
-                deleteGameRoom(socket.roomId);
-                io.sockets.emit('deleteRoom', socket.roomId);
+                // TODO: On refresh it first gets the game rooms then the
+                // TODO: disconnect event happens
+                setTimeout(function() {
+                    // TODO: Check if someone else took the ownership of the room
+                    deleteGameRoom(socket.roomId);
+                    io.sockets.emit('deleteRoom', socket.roomId);
+                }, 4000);
+
             } else {
                 // free player from game
                 gameRoom.gameServer.freePlayers.push(gameRoom.clients[socket.id].playerId);
