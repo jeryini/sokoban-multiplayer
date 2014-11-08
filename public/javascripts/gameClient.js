@@ -2,13 +2,25 @@
 var socket = io();
 
 // represents our current game
-var gameClient;
+//var gameClient;
 
 // object that represents game state
-var GameClient = function() {};
+var GameClient = function(gameState) {
+    // call the parent constructor game, to set the game state
+    Game.call(this, gameState.stones, gameState.blocks,
+        gameState.placeholders, gameState.players);
+
+    // set other properties
+    // set the game room
+    this.roomId = gameState.roomId;
+
+    // our player which the server assigned to us
+    this.playerId = gameState.playerId;
+};
 
 // set parent class to Game
-GameClient.prototype = new Game();
+// TODO: problem with older browsers because of Object create
+GameClient.prototype = Object.create(Game.prototype);
 
 GameClient.prototype.drawGame = function() {
     $("#sokoban").empty();

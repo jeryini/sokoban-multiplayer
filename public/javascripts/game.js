@@ -1,16 +1,15 @@
 /**
- * Created by Jernej on 14.10.2014.
+ * A class that represents game state. This class is inherited
+ * by the server side game.
  */
-// object that represents game state
-var Game = function() {
-    // this properties will be filled on game creation
-    this.stones = {};
-    this.blocks = {};
-    this.placeholders = {};
+var Game = function(stones, blocks, placeholders, players) {
+    this.stones = stones;
+    this.blocks = blocks;
+    this.placeholders = placeholders;
 
     // we save the playerId(key):playerPosition(value)
     // and also playerPosition(key):playerId(value)
-    this.players = {};
+    this.players = players;
 };
 
 // define a possible actions for all game objects
@@ -111,6 +110,7 @@ Game.prototype.newPosition = function(position, action) {
     return [position[0] + action[0], position[1] + action[1]];
 };
 
+// do not export if in browser
 if (typeof module !== "undefined" && module.exports) {
     module.exports = Game;
 }

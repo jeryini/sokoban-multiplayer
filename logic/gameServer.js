@@ -8,24 +8,25 @@ var Game = require('../public/javascripts/game');
 var GameServer = function(levelId) {
     this.createdAt = Date.now();
 
-    // image of the game state
-    this.levelId = levelId;
-    this.gameImage = levels[levelId];
-
-    // players in game
-    this.players = {};
-
-    // available players
-    this.freePlayers = [];
-
     // set the game state from image
-    // TODO: Do not store the game image inside every game server!
-    this.setGameStateFromImage();
+    var gameState = this.setGameStateFromImage(levels[levelId]);
+
+    // call the parent constructor game, to set the game state
+    Game.call(this, gameState.stones, gameState.blocks,
+        gameState.placeholders, gameState.players);
+
+    // free players
+    this.freePlayers = gameState.freePlayers;
+
+    // save the chosen level
+    this.levelId = levelId;
 };
 
 // set the prototype to the main class
-// this way we can access methods from Game
-GameServer.prototype = new Game();
+// this way we can inherit properties from Game
+// TODO: Huge problem, ass all properties of Game are retained!
+// TODO: The objects are shared!
+GameServer.prototype = Object.create(Game.prototype);
 
 // special methods for GameServer
 // execute action differs from the implementation
@@ -50,17 +51,25 @@ Game.prototype.checkExecuteAction = function(action, playerId) {
 // # are stones
 // $ are blocks
 // * are blocks on placeholder position
-GameServer.prototype.setGameStateFromImage = function() {
+GameServer.prototype.setGameStateFromImage = function(gameImage) {
+    var gameState = {
+        stones: {},
+        blocks: {},
+        placeholders: {},
+        players: {},
+        freePlayers: []
+    };
+
     // set appropriate functions for given character
     var setFunction = {
-        '.': function(game, position) {
-            game.placeholders[position] = position;
+        '.': function(position) {
+            gameState.placeholders[position] = position;
         },
         '#': function(game, position) {
-            game.stones[position] = position;
+            gameState.stones[position] = position;
         },
         '$': function(game, position) {
-            game.blocks[position] = position;
+            gameState.blocks[position] = position;
         },
         '*': function(game, position) {
             this['.'](game, position);
@@ -73,28 +82,31 @@ GameServer.prototype.setGameStateFromImage = function() {
         setFunction[i] = function(game, position) {
             var playerId = game.gameImage[position[1]][position[0]];
             // to each player assign a position
-            game.players[playerId] = position;
+            gameState.players[playerId] = position;
 
             // to each position assign a player id
-            game.players[position] = playerId;
+            gameState.players[position] = playerId;
 
             // hold a list of available players
-            game.freePlayers.push(playerId);
+            gameState.freePlayers.push(playerId);
         }
     }
 
     // read image, first iterate over rows
-    for (var y = 0; y < this.gameImage.length; y++) {
+    for (var y = 0; y < gameImage.length; y++) {
         // then over columns
-        for (var x = 0; x < this.gameImage[y].length; x++) {
+        for (var x = 0; x < gameImage[y].length; x++) {
             // check if the function is defined for
             // given character
-            if (this.gameImage[y][x] in setFunction) {
-                setFunction[this.gameImage[y][x]](this, [x, y]);
+            if (gameImage[y][x] in setFunction) {
+                setFunction[gameImage[y][x]]([x, y]);
             }
         }
     }
+
+    // return the game state read from image
+    return gameState;
 };
 
-// TODO: Check for wraping in closure for hiding information!
+// TODO: Check for wrapping in closure for hiding information!
 module.exports = GameServer;

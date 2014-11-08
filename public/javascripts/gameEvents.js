@@ -12,19 +12,7 @@ socket.on('newGameRoom', function (data) {
  */
 socket.on('gameServerState', function(gameState) {
     // create a new game client
-    gameClient = new GameClient();
-
-    // set the game room
-    gameClient.roomId = gameState.roomId;
-
-    // our player which the server assigned to us
-    gameClient.playerId = gameState.playerId;
-
-    // state of the game
-    gameClient.stones = gameState.stones;
-    gameClient.blocks = gameState.blocks;
-    gameClient.placeholders = gameState.placeholders;
-    gameClient.players = gameState.players;
+    var gameClient = new GameClient(gameState);
 
     // when DOM is fully loaded draw the game state
     $(document).ready(function() {
