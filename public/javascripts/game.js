@@ -30,21 +30,6 @@ Game.prototype.solved = function() {
     return true;
 };
 
-// check if game state matches
-Game.prototype.synchronized = function(blocks, players) {
-    for (var key in this.blocks) {
-        if (!(key in blocks))
-            return false;
-    }
-
-    for (var key in this.players) {
-        if (!(key in players)) {
-            return false;
-        }
-    }
-    return true;
-};
-
 // for given action check against game rules and try to
 // execute it
 Game.prototype.executeAction = function(action, playerId) {

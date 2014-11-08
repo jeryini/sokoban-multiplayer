@@ -1,14 +1,19 @@
 var User = require('./user');
 var Player = require('./player');
 var GameServer = require('./gameServer');
+var uuid = require('node-uuid');
 
 // a hash array that will hold games
 // in progress for each room. Key is the id of the room.
 var gameRooms = {};
 
-var GameRoom = function(roomId, levelId, description, userId, socketId) {
-    // id of the room
-    this.roomId = roomId;
+var GameRoom = function(roomName, levelId, description, userId, socketId) {
+    // id of the room, generated from a standard UUID v1
+    // for generating identifiers
+    this.roomId = uuid.v1();
+
+    // name of the room
+    this.roomName = roomName;
 
     // create a game for specified level
     this.gameServer = new GameServer(levelId);
@@ -47,9 +52,14 @@ var getGameRoom = function(roomId) {
     return gameRooms[roomId];
 };
 
+var deleteGameRoom = function(roomId) {
+    delete gameRooms[roomId];
+};
+
 // export the game rooms currently underway on server
 module.exports = {
     gameRooms: gameRooms,
     GameRoom: GameRoom,
-    getGameRoom: getGameRoom
+    getGameRoom: getGameRoom,
+    deleteGameRoom: deleteGameRoom
 };

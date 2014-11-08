@@ -3,7 +3,7 @@
  */
 socket.on('newGameRoom', function (data) {
     // TODO: How to replace hard coded HTML code?
-    $("#gameRooms").append('<div id="' + data.roomId + '" class="list-group-item"><h4 class="list-group-item-heading">' + data.roomId
+    $("#gameRooms").append('<div id="' + data.roomId + '" class="list-group-item"><h2 class="list-group-item-heading">' + data.roomName
         + '</h4><p class="list-group-item-text">' + data.description + '</p><p class="list-group-item-text">Chosen level: ' + data.levelId + '</p><p class="list-group-item-text">Players: <span id="playersIn">' + data.playersIn + '</span>/' + data.allPlayers + '</p><a id="' + data.roomId + '" class="btn btn-sm btn-info room">Join</a></div>');
 });
 
@@ -12,10 +12,13 @@ socket.on('newGameRoom', function (data) {
  */
 socket.on('gameServerState', function(gameState) {
     // create a new game client
-    var gameClient = new GameClient(gameState);
+    gameClient = new GameClient(gameState);
 
     // when DOM is fully loaded draw the game state
     $(document).ready(function() {
+        // disable join for returned room
+        $("#" + gameState.roomId + " a")
+
         // draw game from game state
         gameClient.drawGame();
 
@@ -47,7 +50,7 @@ socket.on('gameServerState', function(gameState) {
  * Update the number of players in game.
  */
 socket.on('updatePlayersIn', function (data) {
-    $("#" + data.roomId + " #playersIn").text(data.playersIn);
+    $("#" + data.roomId + " #players-in").text(data.playersIn);
 });
 
 socket.on('restart', function (blocks, players) { // TIP: you can avoid listening on `connect` and listen on events directly too!
@@ -66,6 +69,10 @@ socket.on('newMove', function (action, blocks, players, playerId) {
     // animate player movement for given action
     // and player id
     gameClient.drawMove(action, playerId);
+});
+
+socket.on('deleteRoom', function (roomId) {
+    $("#" + roomId).empty();
 });
 
 // handle button click for creating game room

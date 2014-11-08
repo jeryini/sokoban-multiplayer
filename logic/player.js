@@ -10,7 +10,7 @@
  */
 var Player = function(userId, socketId, playerId) {
     this.userId = userId;
-    this.socketID = socketId;
+    this.socketId = socketId;
     this.playerId = playerId;
 };
 

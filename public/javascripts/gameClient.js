@@ -2,7 +2,7 @@
 var socket = io();
 
 // represents our current game
-//var gameClient;
+var gameClient;
 
 // object that represents game state
 var GameClient = function(gameState) {
@@ -102,7 +102,7 @@ GameClient.prototype.checkExecuteAction = function(action) {
 
     // first draw our move on client
     this.drawMove(action, this.playerId);
-
+    var gameClient = this;
     /**
      * Emit action to server for a current room and register a callback
      * on message acknowledge with server replaying if this action is possible.
@@ -112,11 +112,11 @@ GameClient.prototype.checkExecuteAction = function(action) {
         // check if state is synchronized (client state matches server state)
         if (!response.synchronized) {
             // set current state from the server state
-            this.blocks = response.blocks;
-            this.players = response.players;
+            gameClient.blocks = response.blocks;
+            gameClient.players = response.players;
 
             // redraw game state because state is not synchronized
-            this.redrawGame();
+            gameClient.redrawGame();
         }
     });
 

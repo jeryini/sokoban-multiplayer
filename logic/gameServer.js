@@ -44,6 +44,24 @@ Game.prototype.checkExecuteAction = function(action, playerId) {
     return this.executeAction(action, playerId);
 };
 
+
+/**
+ * Check if game state matches
+ */
+GameServer.prototype.synchronized = function(blocks, players) {
+    for (var key in this.blocks) {
+        if (!(key in blocks))
+            return false;
+    }
+
+    for (var key in this.players) {
+        if (!(key in players)) {
+            return false;
+        }
+    }
+    return true;
+};
+
 // set the game state from image is only defined for server side.
 // The following rules apply:
 // numbers from 0 to n are player positions
@@ -65,22 +83,22 @@ GameServer.prototype.setGameStateFromImage = function(gameImage) {
         '.': function(position) {
             gameState.placeholders[position] = position;
         },
-        '#': function(game, position) {
+        '#': function(position) {
             gameState.stones[position] = position;
         },
-        '$': function(game, position) {
+        '$': function(position) {
             gameState.blocks[position] = position;
         },
-        '*': function(game, position) {
-            this['.'](game, position);
-            this['$'](game, position);
+        '*': function(position) {
+            this['.'](position);
+            this['$'](position);
         }
     };
 
     // game currently enables up to 9 different players
     for (var i = 0; i <= 9; i++) {
-        setFunction[i] = function(game, position) {
-            var playerId = game.gameImage[position[1]][position[0]];
+        setFunction[i] = function(position) {
+            var playerId = gameImage[position[1]][position[0]];
             // to each player assign a position
             gameState.players[playerId] = position;
 

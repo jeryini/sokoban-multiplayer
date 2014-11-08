@@ -12,7 +12,7 @@ block content
         .list-group#gameRooms
           each gameRoom in gameRooms
             div(id=gameRoom.roomId).list-group-item
-              h4.list-group-item-heading= gameRoom.roomId
+              h2.list-group-item-heading= gameRoom.roomName
               p.list-group-item-text= gameRoom.description
               p.list-group-item-text Chosen level: #{gameRoom.levelId}
               p.list-group-item-text Players:
