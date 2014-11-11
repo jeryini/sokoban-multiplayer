@@ -12,15 +12,19 @@ socket.on('newGameRoom', function (data) {
  */
 socket.on('gameServerState', function(gameState) {
     // create a new game client
+    // TODO: Use Object.create instead of new!
     gameClient = new GameClient(gameState);
 
     // when DOM is fully loaded draw the game state
     $(document).ready(function() {
-        // disable join for returned room
-        $("#" + gameState.roomId + " a")
+        // TODO: disable join for returned room
+        //$("#" + gameState.roomId + " a")
 
         // draw game from game state
         gameClient.drawGame();
+
+        // list players and their colors
+        gameClient.listPlayers(gameState.users);
 
         // event handler for keyboard events
         $(document).keydown(function (event) {
@@ -75,6 +79,10 @@ socket.on('deleteRoom', function (roomId) {
     $("#" + roomId).empty();
 });
 
+socket.on('chatMessage', function(message){
+    $('#messages').append($('<li>').text(message));
+});
+
 // handle button click for creating game room
 $('#create-game-room').click(function() {
     // send a event to create new game room
@@ -91,9 +99,27 @@ $('#restart').click(function(){
     socket.emit('restart');
 });
 
-// handle button click for joining game room
-$('#gameRooms').on("click", "a", function() {
+/**
+ * On modal show set the game room id from the clicked input.
+ */
+$('#modal-join-game-room').on('show.bs.modal', function(e) {
+    var gameRoomId = $(e.relatedTarget).attr("id");
+    $(e.currentTarget).find('input[id="game-room-id"]').val(gameRoomId);
+});
+
+/**
+ * Handle button click for joining game room.
+ */
+//$('#gameRooms').on("click", "a", function() {
+$('#confirm-join-game-room').on("click", function() {
     // join the selected room
-    socket.emit('joinGameRoom', this.id);
+    socket.emit('joinGameRoom', $("#game-room-id").val(), $("#player-name").val());
+    $('#modal-join-game-room').modal('hide')
+});
+
+$('#form-message').submit(function(){
+    socket.emit('chatMessage', $('#message').val());
+    $('#message').val('');
+    return false;
 });
 

@@ -44,6 +44,22 @@ GameRoom.prototype.joinGameRoom = function(userId, socketId) {
 };
 
 /**
+ * Create game server state object for client. We do not want to send
+ * full game server state to the client.
+ */
+GameRoom.prototype.gameServerState = function(player) {
+    return {
+        roomId: this.roomId,
+        playerId: player.playerId,
+        users: this.clients,
+        stones: this.gameServer.stones,
+        blocks: this.gameServer.blocks,
+        placeholders: this.gameServer.placeholders,
+        players: this.gameServer.players
+    };
+};
+
+/**
  * Get the game room from the current games on the server.
  *
  * @param roomId

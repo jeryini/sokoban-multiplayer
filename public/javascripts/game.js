@@ -15,6 +15,8 @@ var Game = function(stones, blocks, placeholders, players) {
 // define a possible actions for all game objects
 // this is common for every created game
 Game.prototype.actions = {
+    // TODO: Use Object.freeze to set the adding and changing of actions to false.
+    // TODO: This way we get the immutable object.
     "up": [0, -1],
     "down": [0, 1],
     "left": [-1, 0],
@@ -23,6 +25,8 @@ Game.prototype.actions = {
 
 // check in game is solved
 Game.prototype.solved = function() {
+    // TODO: Use Object.keys to get the keys! This will only get the own properties
+    // TODO: of the object, without inherited properties!
     for (var key in this.blocks) {
         if (!(key in this.placeholders))
             return false;

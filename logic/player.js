@@ -10,6 +10,8 @@
  */
 var Player = function(userId, socketId, playerId) {
     this.userId = userId;
+    // TODO: Do we need socket id here? We already store it
+    // TODO: as a key!
     this.socketId = socketId;
     this.playerId = playerId;
 };

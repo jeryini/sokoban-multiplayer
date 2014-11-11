@@ -37,14 +37,7 @@ io.on('connection', function(socket){
         socket.roomId = gameRoom.roomId;
 
         // send starting state to the creator
-        socket.emit('gameServerState', {
-            roomId: gameRoom.roomId,
-            playerId: gameRoom.owner.playerId,
-            stones: gameRoom.gameServer.stones,
-            blocks: gameRoom.gameServer.blocks,
-            placeholders: gameRoom.gameServer.placeholders,
-            players: gameRoom.gameServer.players
-        });
+        socket.emit('gameServerState', gameRoom.gameServerState(gameRoom.owner));
 
         // show the new room to all players, even the one
         // who created it
@@ -62,13 +55,13 @@ io.on('connection', function(socket){
     /**
      * Event for joining a game room.
      */
-    socket.on('joinGameRoom', function(roomId) {
+    socket.on('joinGameRoom', function(roomId, userId) {
         // TODO: Check that game room was not deleted in mean time
         // first we need to get the game room from the passed id
         var gameRoom = getGameRoom(roomId);
 
         // join the client, which also returns a new player
-        var player = gameRoom.joinGameRoom('Test', socket.id);
+        var player = gameRoom.joinGameRoom(userId, socket.id);
 
         // join the room on socket level
         socket.join(roomId);
@@ -77,14 +70,7 @@ io.on('connection', function(socket){
         /**
          * Send starting state to user.
          */
-        socket.emit('gameServerState', {
-            roomId: roomId,
-            playerId: player.playerId,
-            stones: gameRoom.gameServer.stones,
-            blocks: gameRoom.gameServer.blocks,
-            placeholders: gameRoom.gameServer.placeholders,
-            players: gameRoom.gameServer.players
-        });
+        socket.emit('gameServerState', gameRoom.gameServerState(player));
 
         /**
          * Update the number of players in game.
@@ -176,6 +162,19 @@ io.on('connection', function(socket){
                 // TODO: disconnect event happens
                 setTimeout(function() {
                     // TODO: Check if someone else took the ownership of the room
+                    /*
+                     The problem is, that when user is the only player in the game,
+                     the transfer of ownership is not possible. So the game room has to be
+                     destroyed on disconnect event, which can also happen on page refresh.
+                     This means that the GET for index will be triggered, which will in turn
+                     load the current game rooms. The problem is that this happens before the
+                     disconnect event! I can see only two solutions. The first is delayed delete,
+                     where other players can in the mean time take ownership of the game room with
+                     joining the game. The second is better. Create a session (cookie) which will
+                     store game rooms for the client. On reconnect take back the ownership of the
+                     room, but before that check if somebody else got it there before. The timeout
+                     before destroying the game room should be a few seconds.
+                     */
                     deleteGameRoom(socket.roomId);
                     io.sockets.emit('deleteRoom', socket.roomId);
                 }, 4000);
@@ -190,7 +189,7 @@ io.on('connection', function(socket){
                 // TODO: Broadcast user disconnect event.
 
                 io.sockets.emit('updatePlayersIn', {
-                    roomId: roomId,
+                    roomId: socket.roomId,
                     // TODO: Move computation for current players to GameServer?
                     playersIn: Object.keys(gameRoom.clients).length
                 });
@@ -209,6 +208,17 @@ io.on('connection', function(socket){
 
         // send message to everyone, including the sender
         io.emit('restart', gameServer.blocks, gameServer.players);
+    });
+
+    /**
+     * A event handler for incoming message.We distinguish two
+     * types of incoming messages, the first is to all users and
+     * the second is to the users in current room.
+     */
+    socket.on('chatMessage', function(message) {
+        // TODO: Implement logic for sending messages
+        // TODO: only to the users in the same room.
+        io.emit('chatMessage', message);
     });
 });
 

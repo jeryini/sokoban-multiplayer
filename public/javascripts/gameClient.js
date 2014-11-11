@@ -81,6 +81,25 @@ GameClient.prototype.drawMove = function(action, playerId) {
         "_" + (this.players[playerId][1] + action[1]));
 };
 
+/**
+ * List all players and their player colors.
+ *
+ * @param players
+ */
+GameClient.prototype.listPlayers = function(players) {
+    // first remove current listing
+    $("#players").empty();
+
+    // TODO: We are sending also socket id of all players to the player!
+    // TODO: This is a high security risk!
+    for (var socketId in players) {
+        $("#players").append("<dt>" + players[socketId].userId + "</dt>");
+
+        // TODO: Add colors to the players. Where to store colors?
+        // TODO: In game room or in game server?
+    }
+};
+
 // execute given action from the given player id
 GameClient.prototype.checkExecuteAction = function(action) {
     var actionName = action;
