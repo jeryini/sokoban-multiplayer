@@ -97,8 +97,9 @@ Game.prototype.executeAction = function(action, playerId) {
  * @returns {boolean}
  */
 Game.prototype.inPlayers = function(position) {
-    for (var player in this.players) {
-        if (this.players[player].position == position) {
+    for (var player in Object.keys(this.players)) {
+        if (this.players[player].position[0] === position[0] &&
+                this.players[player].position[1] === position[1]) {
             return true;
         }
     }
@@ -112,8 +113,9 @@ Game.prototype.inPlayers = function(position) {
  * @returns {*}
  */
 Game.prototype.getPlayerId = function(position) {
-    for (var player in this.players) {
-        if (this.players[player].position == position) {
+    for (var player in Object.keys(this.players)) {
+        if (this.players[player].position[0] === position[0] &&
+                this.players[player].position[1] === position[1]) {
             return this.players[player].id;
         }
     }

@@ -35,6 +35,7 @@ GameServer.prototype = Object.create(Game.prototype);
  */
 Game.prototype.checkExecuteAction = function(action, playerId) {
     // first check if action is even possible
+    // TODO: Use Object.keys!
     if (!(action in this.actions)) {
         return false;
     }
@@ -51,23 +52,26 @@ Game.prototype.checkExecuteAction = function(action, playerId) {
  * Check if game state matches
  */
 GameServer.prototype.synchronized = function(blocks, players) {
-    for (var key in this.blocks) {
-        if (!(key in blocks))
-            return false;
+    // TODO: We could use for in as this objects do not inherit
+    // TODO: from any other prototype
+    var inBlock = function(block, index, array) {
+        return block in blocks;
+    };
+
+    // for every block check if it matches block position on server.
+    // Immediately returns if the predicate in passed function is false.
+    if (!Object.keys(this.blocks).every(inBlock)) {
+        return false;
     }
 
-    // TODO: Test this! We broke the synchronization!
-    for (var key in this.players) {
-        if (!(players[key].position == this.players[key].position)) {
-            return false;
-        }
-    }
-    return true;
+    var inPlayer = function(player, index, array) {
+        return this.players[player].position[0] === players[player].position[0] &&
+            this.players[player].position[1] === players[player].position[1];
+    };
+
+    // check also if player positions do not match
+    return Object.keys(this.players).every(inPlayer, this);
 };
-
-//
-//
-// numbers from 0 to n are player positions
 
 /**
  * Set the game state from image is only defined for server side.
@@ -76,6 +80,7 @@ GameServer.prototype.synchronized = function(blocks, players) {
  * # are stones
  * $ are blocks
  * * are blocks on placeholder position
+ * numbers from 0 to n are player positions
  *
  * @param gameImage
  * @returns {{stones: {}, blocks: {}, placeholders: {}, players: {}, freePlayers: Array}}

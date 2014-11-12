@@ -129,6 +129,7 @@ io.on('connection', function(socket){
         // for given room
         // we need to send player id and action to execute
         // for given player id
+        // TODO: Broadcast action even though it is possible that is not synchronized
         socket.broadcast.to(socket.roomId).emit('newMove', action, gameRoom.gameServer.blocks,
             gameRoom.gameServer.players, gameRoom.users[socket.id].player.id);
     });

@@ -64,6 +64,7 @@ GameRoom.prototype.gameServerState = function(user) {
     // of other users, so we will create object, that will
     // contain userId as a key and player id as a value
     var users = {};
+    // TODO: Use Object.keys!
     for (var user in this.users) {
         users[this.users[user].id] = this.users[user].player.id;
     }
