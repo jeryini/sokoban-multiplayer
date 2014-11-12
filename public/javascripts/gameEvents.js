@@ -13,6 +13,7 @@ socket.on('newGameRoom', function (data) {
 socket.on('gameServerState', function(gameState) {
     // create a new game client
     // TODO: Use Object.create instead of new!
+    // TODO: IE9 and less does not support this!
     gameClient = new GameClient(gameState);
 
     // when DOM is fully loaded draw the game state
@@ -24,7 +25,7 @@ socket.on('gameServerState', function(gameState) {
         gameClient.drawGame();
 
         // list players and their colors
-        gameClient.listPlayers(gameState.users);
+        gameClient.listPlayers(gameState.users, gameState.players);
 
         // event handler for keyboard events
         $(document).keydown(function (event) {
@@ -57,7 +58,7 @@ socket.on('updatePlayersIn', function (data) {
     $("#" + data.roomId + " #players-in").text(data.playersIn);
 });
 
-socket.on('restart', function (blocks, players) { // TIP: you can avoid listening on `connect` and listen on events directly too!
+socket.on('restart', function (blocks, players) {
     gameClient.blocks = blocks;
     gameClient.players = players;
 

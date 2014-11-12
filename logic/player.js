@@ -1,19 +1,16 @@
-// TODO: should the player extend the user?
 /**
- * This maps user id and his socket id with a given player
- * in the game.
+ * Each user that actively participates in the game
+ * has a player with a unique id, position and color.
  *
- * @param userId
- * @param socketId
- * @param playerId
+ * @param id
+ * @param position
+ * @param color
  * @constructor
  */
-var Player = function(userId, socketId, playerId) {
-    this.userId = userId;
-    // TODO: Do we need socket id here? We already store it
-    // TODO: as a key!
-    this.socketId = socketId;
-    this.playerId = playerId;
+var Player = function(id, position, color) {
+    this.id = id;
+    this.position = position;
+    this.color = color;
 };
 
 module.exports = Player;

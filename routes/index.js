@@ -18,9 +18,9 @@ router.get('/', function(req, res) {
             roomName: gameRooms[roomId].roomName,
             description: gameRooms[roomId].description,
             levelId: gameRooms[roomId].levelId,
-            playersIn: Object.keys(gameRooms[roomId].clients).length,
-            allPlayers: gameRooms[roomId].gameServer.freePlayers.length +
-                Object.keys(gameRooms[roomId].clients).length
+            playersIn: Object.keys(gameRooms[roomId].gameServer.players).length -
+                gameRooms[roomId].gameServer.freePlayers.length,
+            allPlayers: Object.keys(gameRooms[roomId].gameServer.players).length
         });
     }
     res.render('index', {title: "Test", gameRooms: rooms });

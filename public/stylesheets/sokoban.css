@@ -20,7 +20,7 @@
 }
 
 .player{
-    border:10px solid #0000ff;
+    border:10px solid;
     width:12px;
     height:12px;
     position:absolute;

@@ -15,7 +15,7 @@ var GameClient = function(gameState) {
     this.roomId = gameState.roomId;
 
     // our player which the server assigned to us
-    this.playerId = gameState.playerId;
+    this.player = gameState.player;
 };
 
 // set parent class to Game
@@ -33,9 +33,8 @@ GameClient.prototype.drawGame = function() {
     for (var i in this.placeholders) {
         $("#sokoban").append('<div class = "placeholder" style = "top:' + this.placeholders[i][1] * 32 + 'px;left:' + this.placeholders[i][0] * 32 + 'px"></div>');
     }
-    for (var i in this.players) {
-        if (typeof this.players[i][1] !== "undefined")
-            $("#sokoban").append('<div id ="p' + this.players[i][0] + '_' + this.players[i][1] + '" class = "player" style = "z-index:1000;top:' + this.players[i][1] * 32 + 'px;left:' + this.players[i][0] * 32 + 'px"></div>');
+    for (var player in this.players) {
+        $("#sokoban").append('<div id ="p' + this.players[player].position[0] + '_' + this.players[player].position[1] + '" class = "player" style = "z-index:1000;border-color: ' + this.players[player].color + ';top:' + this.players[player].position[1] * 32 + 'px;left:' + this.players[player].position[0] * 32 + 'px"></div>');
     }
 };
 
@@ -48,37 +47,36 @@ GameClient.prototype.redrawGame = function() {
     for (var i in this.blocks) {
         $("#sokoban").append('<div id = "b' + this.blocks[i][0] + '_' + this.blocks[i][1] + '" class = "block" style = "z-index:1000;top:' + this.blocks[i][1] * 32 + 'px;left:' + this.blocks[i][0] * 32 + 'px"></div>');
     }
-    for (var i in this.players) {
-        if (typeof this.players[i][1] !== "undefined")
-            $("#sokoban").append('<div id ="p' + this.players[i][0] + '_' + this.players[i][1] + '" class = "player" style = "z-index:1000;top:' + this.players[i][1] * 32 + 'px;left:' + this.players[i][0] * 32 + 'px"></div>');
+    for (var player in this.players) {
+        $("#sokoban").append('<div id ="p' + this.players[player].position[0] + '_' + this.players[player].position[1] + '" class = "player" style = "z-index:1000;border-color: ' + this.players[player].color + ';top:' + this.players[player].position[1] * 32 + 'px;left:' + this.players[player].position[0] * 32 + 'px"></div>');
     }
 };
 
 GameClient.prototype.drawMove = function(action, playerId) {
     // first check for movement of other player
     // (if pushed by our player)
-    $("#p" + this.players[playerId][0] + "_" +
-        this.players[playerId][1]).animate({
+    $("#p" + this.players[playerId].position[0] + "_" +
+        this.players[playerId].position[1]).animate({
         left: "+=" + (action[0] * 32),
         top: "+=" + (action[1] * 32)
-    }, 100).attr("id","p"+(this.players[playerId][0] + action[0]) +
-        "_" + (this.players[playerId][1] + action[1]));
+    }, 100).attr("id","p"+(this.players[playerId].position[0] + action[0]) +
+        "_" + (this.players[playerId].position[1] + action[1]));
 
     // movement of our player
-    $("#p" + (this.players[playerId][0] - action[0]) + "_" +
-        (this.players[playerId][1] - action[1])).animate({
+    $("#p" + (this.players[playerId].position[0] - action[0]) + "_" +
+        (this.players[playerId].position[1] - action[1])).animate({
         left: "+=" + (action[0] * 32),
         top: "+=" + (action[1] * 32)
-    }, 100).attr("id","p"+this.players[playerId][0] +
-        "_" + this.players[playerId][1]);
+    }, 100).attr("id","p"+this.players[playerId].position[0] +
+        "_" + this.players[playerId].position[1]);
 
     // movement of block (if pushed by our player)
-    $("#b" + this.players[playerId][0] + "_" +
-        this.players[playerId][1]).animate({
+    $("#b" + this.players[playerId].position[0] + "_" +
+        this.players[playerId].position[1]).animate({
         left: "+=" + (action[0] * 32),
         top: "+=" + (action[1] * 32)
-    }, 100).attr("id","b"+(this.players[playerId][0] + action[0]) +
-        "_" + (this.players[playerId][1] + action[1]));
+    }, 100).attr("id","b"+(this.players[playerId].position[0] + action[0]) +
+        "_" + (this.players[playerId].position[1] + action[1]));
 };
 
 /**
@@ -86,17 +84,12 @@ GameClient.prototype.drawMove = function(action, playerId) {
  *
  * @param players
  */
-GameClient.prototype.listPlayers = function(players) {
+GameClient.prototype.listPlayers = function(users, players) {
     // first remove current listing
     $("#players").empty();
 
-    // TODO: We are sending also socket id of all players to the player!
-    // TODO: This is a high security risk!
-    for (var socketId in players) {
-        $("#players").append("<dt>" + players[socketId].userId + "</dt>");
-
-        // TODO: Add colors to the players. Where to store colors?
-        // TODO: In game room or in game server?
+    for (var user in users) {
+        $("#players").append("<dt>" + user + "</dt><dd>" + players[users[user]] + "</dd>");
     }
 };
 
@@ -115,12 +108,12 @@ GameClient.prototype.checkExecuteAction = function(action) {
     // is possible then it executes the action (changes
     // game state) and returns true. Only if action is executable
     // go check on server for acknowledgment.
-    if (!(this.executeAction(action, this.playerId))) {
+    if (!(this.executeAction(action, this.player.id))) {
         return false;
     }
 
     // first draw our move on client
-    this.drawMove(action, this.playerId);
+    this.drawMove(action, this.player.id);
     var gameClient = this;
     /**
      * Emit action to server for a current room and register a callback

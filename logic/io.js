@@ -5,8 +5,6 @@ var deleteGameRoom = require('./gameRoom').deleteGameRoom;
 // initialize socket without server arg!
 var io = require('socket.io')();
 
-// listen on connection events for incoming socket
-// this fires every time new client connects
 /**
  * Represents a connection events for incoming socket.
  * It fires every time a new client connects.
@@ -30,7 +28,8 @@ io.on('connection', function(socket){
         // also pass in socket id of the creator
         // TODO: Should this be asynchronous so that it does not block main
         // TODO: thread?
-        var gameRoom = new GameRoom(roomName, levelId, description, userId, socket.id);
+        var gameRoom = Object.create(GameRoom.prototype);
+        GameRoom.call(gameRoom, roomName, levelId, description, userId, socket.id);
 
         // join the room on socket level
         socket.join(gameRoom.roomId);
@@ -46,9 +45,9 @@ io.on('connection', function(socket){
             roomName: gameRoom.roomName,
             description: gameRoom.description,
             levelId: gameRoom.gameServer.levelId,
-            playersIn: Object.keys(gameRoom.clients).length,
-            allPlayers: gameRoom.gameServer.freePlayers.length +
-                Object.keys(gameRoom.clients).length
+            playersIn: Object.keys(gameRoom.gameServer.players).length -
+                gameRoom.gameServer.freePlayers.length,
+            allPlayers: Object.keys(gameRoom.gameServer.players).length
         });
     });
 
@@ -60,8 +59,8 @@ io.on('connection', function(socket){
         // first we need to get the game room from the passed id
         var gameRoom = getGameRoom(roomId);
 
-        // join the client, which also returns a new player
-        var player = gameRoom.joinGameRoom(userId, socket.id);
+        // join the game room, which also returns a new user
+        var user = gameRoom.joinGameRoom(userId, socket.id);
 
         // join the room on socket level
         socket.join(roomId);
@@ -70,15 +69,15 @@ io.on('connection', function(socket){
         /**
          * Send starting state to user.
          */
-        socket.emit('gameServerState', gameRoom.gameServerState(player));
+        socket.emit('gameServerState', gameRoom.gameServerState(user));
 
         /**
          * Update the number of players in game.
          */
         io.sockets.emit('updatePlayersIn', {
             roomId: roomId,
-            // TODO: Move computation for current players to GameServer?
-            playersIn: Object.keys(gameRoom.clients).length
+            playersIn: Object.keys(gameRoom.gameServer.players).length -
+                gameRoom.gameServer.freePlayers.length
         });
     });
 
@@ -106,7 +105,7 @@ io.on('connection', function(socket){
         // is synchronized as the action should be executable if client
         // send it to the server (it implicitly means that the state
         // does not match).
-        var isExecuted = gameRoom.gameServer.checkExecuteAction(action, gameRoom.clients[socket.id].playerId);
+        var isExecuted = gameRoom.gameServer.checkExecuteAction(action, gameRoom.users[socket.id].player.id);
         if (!isExecuted) {
             fn({
                 'synchronized': false,
@@ -131,7 +130,7 @@ io.on('connection', function(socket){
         // we need to send player id and action to execute
         // for given player id
         socket.broadcast.to(socket.roomId).emit('newMove', action, gameRoom.gameServer.blocks,
-            gameRoom.gameServer.players, gameRoom.clients[socket.id].playerId);
+            gameRoom.gameServer.players, gameRoom.users[socket.id].player.id);
     });
 
     // event when user disconnects
@@ -146,10 +145,10 @@ io.on('connection', function(socket){
                 gameRoom.owner = undefined;
 
                 // TODO: Move logic to gameRoom?
-                // transfer ownership of the room to the next client
-                for (var socketId in gameRoom.clients) {
-                    if (gameRoom.clients[socketId].socketId != socket.id) {
-                        gameRoom.owner = gameRoom.clients[socketId];
+                // transfer ownership of the room to the next user
+                for (var socketId in gameRoom.users) {
+                    if (gameRoom.users[socketId].socketId != socket.id) {
+                        gameRoom.owner = gameRoom.users[socketId];
                         break;
                     }
                 }
@@ -181,27 +180,26 @@ io.on('connection', function(socket){
 
             } else {
                 // free player from game
-                gameRoom.gameServer.freePlayers.push(gameRoom.clients[socket.id].playerId);
+                gameRoom.gameServer.freePlayers.push(gameRoom.users[socket.id].player.playerId);
 
-                // remove client from game room
-                delete gameRoom.clients[socket.id];
+                // remove user from game room
+                delete gameRoom.users[socket.id];
 
                 // TODO: Broadcast user disconnect event.
 
                 io.sockets.emit('updatePlayersIn', {
                     roomId: socket.roomId,
-                    // TODO: Move computation for current players to GameServer?
-                    playersIn: Object.keys(gameRoom.clients).length
+                    playersIn: Object.keys(gameRoom.gameServer.players).length -
+                        gameRoom.gameServer.freePlayers.length
                 });
             }
         }
         console.log('user disconnected');
     });
 
-    // TODO: Implement a chat!
-
     // event for restarting a game
     socket.on('restart', function(msg){
+        // TODO: Fix restart!
         gameServer.blocks = {};
         gameServer.players = {};
         gameServer.setGameStateFromImage();

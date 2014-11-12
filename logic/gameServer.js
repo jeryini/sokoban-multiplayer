@@ -1,10 +1,10 @@
+var Game = require('../public/javascripts/game');
+var Player = require('./player');
 var levels = require('../levels/levels');
 
-// we need the game client class as it will be
-// a prototype for our GameServer class
-var Game = require('../public/javascripts/game');
-
-// server side game object with additional fields
+/**
+ * Server side game class with additional fields.
+ */
 var GameServer = function(levelId) {
     this.createdAt = Date.now();
 
@@ -24,13 +24,15 @@ var GameServer = function(levelId) {
 
 // set the prototype to the main class
 // this way we can inherit properties from Game
-// TODO: Huge problem, ass all properties of Game are retained!
-// TODO: The objects are shared!
 GameServer.prototype = Object.create(Game.prototype);
 
-// special methods for GameServer
-// execute action differs from the implementation
-// on client side
+/**
+ * Execute action differs from the implementation on the client side.
+ *
+ * @param action
+ * @param playerId
+ * @returns {*}
+ */
 Game.prototype.checkExecuteAction = function(action, playerId) {
     // first check if action is even possible
     if (!(action in this.actions)) {
@@ -54,21 +56,30 @@ GameServer.prototype.synchronized = function(blocks, players) {
             return false;
     }
 
+    // TODO: Test this! We broke the synchronization!
     for (var key in this.players) {
-        if (!(key in players)) {
+        if (!(players[key].position == this.players[key].position)) {
             return false;
         }
     }
     return true;
 };
 
-// set the game state from image is only defined for server side.
-// The following rules apply:
+//
+//
 // numbers from 0 to n are player positions
-// . are placeholders
-// # are stones
-// $ are blocks
-// * are blocks on placeholder position
+
+/**
+ * Set the game state from image is only defined for server side.
+ * The following rules apply:
+ * . are placeholders
+ * # are stones
+ * $ are blocks
+ * * are blocks on placeholder position
+ *
+ * @param gameImage
+ * @returns {{stones: {}, blocks: {}, placeholders: {}, players: {}, freePlayers: Array}}
+ */
 GameServer.prototype.setGameStateFromImage = function(gameImage) {
     var gameState = {
         stones: {},
@@ -77,6 +88,10 @@ GameServer.prototype.setGameStateFromImage = function(gameImage) {
         players: {},
         freePlayers: []
     };
+
+    // 10 different colors for players
+    var colors = ["#00008B", "#8B0000", "#006400", "#000000", "#FF8C00", "#9400D3",
+        "#00CED1", "#556B2F", "#B8860B", "#A9A9A9"];
 
     // set appropriate functions for given character
     var setFunction = {
@@ -99,11 +114,15 @@ GameServer.prototype.setGameStateFromImage = function(gameImage) {
     for (var i = 0; i <= 9; i++) {
         setFunction[i] = function(position) {
             var playerId = gameImage[position[1]][position[0]];
-            // to each player assign a position
-            gameState.players[playerId] = position;
 
-            // to each position assign a player id
-            gameState.players[position] = playerId;
+            // create a new player
+            var player = Object.create(Player.prototype);
+
+            // call a constructor on the new player
+            Player.call(player, playerId, position, colors[playerId]);
+
+            // assign a player to id
+            gameState.players[playerId] = player;
 
             // hold a list of available players
             gameState.freePlayers.push(playerId);
@@ -126,5 +145,4 @@ GameServer.prototype.setGameStateFromImage = function(gameImage) {
     return gameState;
 };
 
-// TODO: Check for wrapping in closure for hiding information!
 module.exports = GameServer;

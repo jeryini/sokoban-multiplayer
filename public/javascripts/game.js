@@ -3,12 +3,11 @@
  * by the server side game.
  */
 var Game = function(stones, blocks, placeholders, players) {
+    // each object contains one or multiple keys that represent
+    // position of the given object
     this.stones = stones;
     this.blocks = blocks;
     this.placeholders = placeholders;
-
-    // we save the playerId(key):playerPosition(value)
-    // and also playerPosition(key):playerId(value)
     this.players = players;
 };
 
@@ -38,7 +37,7 @@ Game.prototype.solved = function() {
 // execute it
 Game.prototype.executeAction = function(action, playerId) {
     // first make a move
-    var playerPosition = this.players[playerId];
+    var playerPosition = this.players[playerId].position;
     var newPlayerPosition = this.newPosition(playerPosition, action);
 
     // check if new position is in stones
@@ -55,7 +54,7 @@ Game.prototype.executeAction = function(action, playerId) {
         // player
         if (newBlockPosition in this.blocks ||
             newBlockPosition in this.stones ||
-            newBlockPosition in this.players) {
+            this.inPlayers(newBlockPosition)) {
             return false;
         }
 
@@ -67,7 +66,7 @@ Game.prototype.executeAction = function(action, playerId) {
     }
 
     // check for new position in opposite players
-    if (newPlayerPosition in this.players) {
+    if (this.inPlayers(newPlayerPosition)) {
         var newOppositePlayerPosition = this.newPosition(newPlayerPosition, action);
 
         // check that move of the player does not move
@@ -75,23 +74,50 @@ Game.prototype.executeAction = function(action, playerId) {
         // other player
         if (newOppositePlayerPosition in this.blocks ||
             newOppositePlayerPosition in this.stones ||
-            newOppositePlayerPosition in this.players) {
+            this.inPlayers(newOppositePlayerPosition)) {
             return false;
         }
 
         // everything ok, save the new opposite player position
-        var oppositePlayerId = this.players[newPlayerPosition];
-        this.players[oppositePlayerId] = newOppositePlayerPosition;
-        this.players[newOppositePlayerPosition] = oppositePlayerId;
+        var oppositePlayerId = this.getPlayerId(newPlayerPosition);
+        this.players[oppositePlayerId].position = newOppositePlayerPosition;
     }
 
     // action is possible and does not move
     // any of the block
-    this.players[playerId] = newPlayerPosition;
-    this.players[newPlayerPosition] = playerId;
-    delete this.players[playerPosition];
+    this.players[playerId].position = newPlayerPosition;
 
     return true;
+};
+
+/**
+ * Check if position is in any of the players.
+ *
+ * @param position
+ * @returns {boolean}
+ */
+Game.prototype.inPlayers = function(position) {
+    for (var player in this.players) {
+        if (this.players[player].position == position) {
+            return true;
+        }
+    }
+    return false;
+};
+
+/**
+ * Get the player id given the position.
+ *
+ * @param position
+ * @returns {*}
+ */
+Game.prototype.getPlayerId = function(position) {
+    for (var player in this.players) {
+        if (this.players[player].position == position) {
+            return this.players[player].id;
+        }
+    }
+    return undefined;
 };
 
 // get new position for selected player and action
