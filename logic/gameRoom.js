@@ -52,6 +52,11 @@ GameRoom.prototype.joinGameRoom = function(userId, socketId) {
     var user = Object.create(User.prototype);
     User.call(user, userId, socketId, player);
     this.users[socketId] = user;
+    // also check if there is no owner. If it is missing,
+    // then set it to the current user
+    if (this.owner === undefined) {
+        this.owner = user;
+    }
     return user;
 };
 

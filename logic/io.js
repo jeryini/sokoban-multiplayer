@@ -66,6 +66,13 @@ io.on('connection', function(socket){
         // first we need to get the game room from the passed id
         var gameRoom = getGameRoom(roomId);
 
+        // check that game room exists
+        if (!gameRoom) {
+            // inform user that the game room does not exist
+            io.to(socket.id).emit('chatMessage', "The selected game room does not exist anymore!");
+            return false;
+        }
+
         // join the game room, which also returns a new user
         var user = gameRoom.joinGameRoom(userId, socket.id);
 
@@ -78,8 +85,12 @@ io.on('connection', function(socket){
          */
         socket.emit('gameServerState', gameRoom.gameServerState(user));
 
+        // broadcast to other users in room that the player has joined
+        socket.broadcast.to(socket.roomId).emit('chatMessage', "User " + user.id + " has joined the game.");
+
         // check if all players have joined
         if (gameRoom.checkAllPlayersJoined()) {
+            // broadcast that game is enabled to all players
             io.sockets.in(socket.roomId).emit('gameEnabled', true);
         }
 
@@ -144,54 +155,53 @@ io.on('connection', function(socket){
 
     // event when user disconnects
     socket.on('disconnect', function() {
-        //if (socket.roomId != undefined) {
-            // first we need to get game room of the socket
-            var gameRoom = getGameRoom(socket.roomId);
+        // first we need to get game room of the socket
+        var gameRoom = getGameRoom(socket.roomId);
 
-            // transfer ownership of the game room if the disconnected
-            // user is the owner of the game
-            gameRoom.transferOwnership(socket.id);
+        // get the user that is disconnecting
+        var userId = gameRoom.users[socket.id].id;
 
-            // if owner is still undefined, then there is no player left,
-            // delete the room
-            if (gameRoom.owner === undefined) {
-                // TODO: On refresh it first gets the game rooms then the
-                // TODO: disconnect event happens
-                setTimeout(function() {
-                    // TODO: Check if someone else took the ownership of the room
-                    /*
-                     The problem is, that when user is the only player in the game,
-                     the transfer of ownership is not possible. So the game room has to be
-                     destroyed on disconnect event, which can also happen on page refresh.
-                     This means that the GET for index will be triggered, which will in turn
-                     load the current game rooms. The problem is that this happens before the
-                     disconnect event! I can see only two solutions. The first is delayed delete,
-                     where other players can in the mean time take ownership of the game room with
-                     joining the game. The second is better. Create a session (cookie) which will
-                     store game rooms for the client. On reconnect take back the ownership of the
-                     room, but before that check if somebody else got it there before. The timeout
-                     before destroying the game room should be a few seconds.
-                     */
+        // transfer ownership of the game room if the disconnected
+        // user is the owner of the game
+        gameRoom.transferOwnership(socket.id);
+
+        // if owner is still undefined, then there is no player left,
+        // delete the room
+        if (gameRoom.owner === undefined) {
+            setTimeout(function() {
+                // TODO: Check if someone else took the ownership of the room
+                /*
+                 The problem is, that when user is the only player in the game,
+                 the transfer of ownership is not possible. So the game room has to be
+                 destroyed on disconnect event, which can also happen on page refresh.
+                 This means that the GET for index will be triggered, which will in turn
+                 load the current game rooms. The problem is that this happens before the
+                 disconnect event! I can see only two solutions. The first is delayed delete,
+                 where other players can in the mean time take ownership of the game room with
+                 joining the game. The second is better. Create a session (cookie) which will
+                 store game rooms for the client. On reconnect take back the ownership of the
+                 room, but before that check if somebody else got it there before. The timeout
+                 before destroying the game room should be a few seconds.
+                 */
+                if (gameRoom.owner === undefined) {
                     deleteGameRoom(socket.roomId);
                     io.sockets.emit('deleteRoom', socket.roomId);
-                }, 4000);
+                }
+            }, 20000);
+        }
+        // free player from game
+        gameRoom.gameServer.freePlayers.push(gameRoom.users[socket.id].player.id);
 
-            } else {
-                // free player from game
-                gameRoom.gameServer.freePlayers.push(gameRoom.users[socket.id].player.playerId);
+        // remove user from game room
+        delete gameRoom.users[socket.id];
 
-                // remove user from game room
-                delete gameRoom.users[socket.id];
+        io.sockets.emit('updatePlayersIn', {
+            roomId: socket.roomId,
+            playersIn: Object.keys(gameRoom.gameServer.players).length -
+                gameRoom.gameServer.freePlayers.length
+        });
 
-                // TODO: Broadcast user disconnect event.
-
-                io.sockets.emit('updatePlayersIn', {
-                    roomId: socket.roomId,
-                    playersIn: Object.keys(gameRoom.gameServer.players).length -
-                        gameRoom.gameServer.freePlayers.length
-                });
-            }
-        //}
+        socket.broadcast.to(socket.roomId).emit('chatMessage', "User " + userId + " has left the game.");
         console.log('user disconnected');
     });
 
