@@ -4,7 +4,7 @@ var app = require('../app');
 var io = require('../logic/io');
 
 // port on which to listen
-app.set('port', process.env.PORT || 3000);
+app.set('port', process.env.port || 3000);
 
 // listen for connections
 var server = app.listen(app.get('port'), function() {

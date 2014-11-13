@@ -38,6 +38,13 @@ io.on('connection', function(socket){
         // send starting state to the creator
         socket.emit('gameServerState', gameRoom.gameServerState(gameRoom.owner));
 
+        // check if all players have joined, this is in case a game
+        // is a 1 player game
+        if (gameRoom.checkAllPlayersJoined()) {
+            // send it to all players in given room, even to the sender
+            io.sockets.in(socket.roomId).emit('gameEnabled', true);
+        }
+
         // show the new room to all players, even the one
         // who created it
         io.sockets.emit('newGameRoom', {
@@ -71,6 +78,11 @@ io.on('connection', function(socket){
          */
         socket.emit('gameServerState', gameRoom.gameServerState(user));
 
+        // check if all players have joined
+        if (gameRoom.checkAllPlayersJoined()) {
+            io.sockets.in(socket.roomId).emit('gameEnabled', true);
+        }
+
         /**
          * Update the number of players in game.
          */
@@ -95,9 +107,6 @@ io.on('connection', function(socket){
 
         // first we need to get game room of the socket
         var gameRoom = getGameRoom(socket.roomId);
-
-        // TODO: Check that all users have joined the game
-        // TODO: But in the end only one user could play the game?
 
         // execute given action on server. If the action is
         // not executable it immediately returns current game state
@@ -129,31 +138,19 @@ io.on('connection', function(socket){
         // for given room
         // we need to send player id and action to execute
         // for given player id
-        // TODO: Broadcast action even though it is possible that is not synchronized
         socket.broadcast.to(socket.roomId).emit('newMove', action, gameRoom.gameServer.blocks,
             gameRoom.gameServer.players, gameRoom.users[socket.id].player.id);
     });
 
     // event when user disconnects
     socket.on('disconnect', function() {
-        if (socket.roomId != undefined) {
+        //if (socket.roomId != undefined) {
             // first we need to get game room of the socket
             var gameRoom = getGameRoom(socket.roomId);
 
-            // then check if disconnected user is owner of the room
-            if (gameRoom.owner.socketId == socket.id) {
-                // set it to undefined
-                gameRoom.owner = undefined;
-
-                // TODO: Move logic to gameRoom?
-                // transfer ownership of the room to the next user
-                for (var socketId in gameRoom.users) {
-                    if (gameRoom.users[socketId].socketId != socket.id) {
-                        gameRoom.owner = gameRoom.users[socketId];
-                        break;
-                    }
-                }
-            }
+            // transfer ownership of the game room if the disconnected
+            // user is the owner of the game
+            gameRoom.transferOwnership(socket.id);
 
             // if owner is still undefined, then there is no player left,
             // delete the room
@@ -194,7 +191,7 @@ io.on('connection', function(socket){
                         gameRoom.gameServer.freePlayers.length
                 });
             }
-        }
+        //}
         console.log('user disconnected');
     });
 

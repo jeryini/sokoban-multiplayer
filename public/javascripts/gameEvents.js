@@ -80,6 +80,13 @@ socket.on('deleteRoom', function (roomId) {
     $("#" + roomId).empty();
 });
 
+/**
+ *
+ */
+socket.on('gameEnabled', function (enabled) {
+    gameClient.enabled = enabled;
+});
+
 socket.on('chatMessage', function(message){
     $('#messages').append($('<li>').text(message));
 });

@@ -9,6 +9,7 @@ var Game = function(stones, blocks, placeholders, players) {
     this.blocks = blocks;
     this.placeholders = placeholders;
     this.players = players;
+    this.enabled = false;
 };
 
 // define a possible actions for all game objects
@@ -97,6 +98,8 @@ Game.prototype.executeAction = function(action, playerId) {
  * @returns {boolean}
  */
 Game.prototype.inPlayers = function(position) {
+    // TODO: Totally wrong, as we get indexes!
+    // TODO: Use ordinary for in!!!
     for (var player in Object.keys(this.players)) {
         if (this.players[player].position[0] === position[0] &&
                 this.players[player].position[1] === position[1]) {
@@ -113,6 +116,7 @@ Game.prototype.inPlayers = function(position) {
  * @returns {*}
  */
 Game.prototype.getPlayerId = function(position) {
+    // TODO: Totally wrong, as we get indexes!
     for (var player in Object.keys(this.players)) {
         if (this.players[player].position[0] === position[0] &&
                 this.players[player].position[1] === position[1]) {

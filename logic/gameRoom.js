@@ -56,6 +56,21 @@ GameRoom.prototype.joinGameRoom = function(userId, socketId) {
 };
 
 /**
+ * Check if all slots are taken for current game.
+ *
+ */
+GameRoom.prototype.checkAllPlayersJoined = function() {
+    // once the game is enabled do not check if all players are in
+    if (this.gameServer.enabled) {
+        return true;
+    }
+
+    // otherwise check for number of free players
+    this.gameServer.enabled = (this.gameServer.freePlayers.length == 0);
+    return this.gameServer.enabled;
+};
+
+/**
  * Create game server state object for client. We do not want to send
  * full game server state to the user.
  */
@@ -64,19 +79,37 @@ GameRoom.prototype.gameServerState = function(user) {
     // of other users, so we will create object, that will
     // contain userId as a key and player id as a value
     var users = {};
-    // TODO: Use Object.keys!
-    for (var user in this.users) {
-        users[this.users[user].id] = this.users[user].player.id;
+    for (var socketId in this.users) {
+        users[this.users[socketId].id] = this.users[socketId].player.id;
     }
     return {
         roomId: this.roomId,
-        player: this.users[user].player,
+        player: user.player,
         users: users,
         stones: this.gameServer.stones,
         blocks: this.gameServer.blocks,
         placeholders: this.gameServer.placeholders,
         players: this.gameServer.players
     };
+};
+
+/**
+ * Transfer ownership if the passed id is the owner of the game.
+ */
+GameRoom.prototype.transferOwnership = function(disconnectedSocketId) {
+    // then check if disconnected user is owner of the room
+    if (this.owner.socketId == disconnectedSocketId) {
+        // set it to undefined
+        this.owner = undefined;
+
+        // transfer ownership of the room to the next user
+        for (var socketId in this.users) {
+            if (this.users[socketId].socketId != disconnectedSocketId) {
+                this.owner = this.users[socketId];
+                break;
+            }
+        }
+    }
 };
 
 /**

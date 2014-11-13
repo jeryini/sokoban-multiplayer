@@ -1,7 +1,6 @@
-/**
- * Created by Jernej on 15.10.2014.
- */
 var levels = {};
+
+// list of our levels
 levels[0] = [
     "  ###",
     "  #.#",

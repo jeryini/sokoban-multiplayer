@@ -95,6 +95,11 @@ GameClient.prototype.listPlayers = function(users, players) {
 
 // execute given action from the given player id
 GameClient.prototype.checkExecuteAction = function(action) {
+    // check if playing is enabled
+    if (!this.enabled) {
+        $('#messages').append($('<li>').text("Please wait for all players to join!"));
+        return false;
+    }
     var actionName = action;
 
     // first check if action is even possible
