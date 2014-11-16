@@ -16,6 +16,9 @@ socket.on('gameServerState', function(gameState) {
     // TODO: IE9 and less does not support this!
     gameClient = new GameClient(gameState);
 
+
+
+
     // when DOM is fully loaded draw the game state
     $(document).ready(function() {
         // TODO: disable join for returned room
@@ -23,6 +26,11 @@ socket.on('gameServerState', function(gameState) {
 
         // draw game from game state
         gameClient.drawGame();
+
+        // add listener to redraw on window resize
+        $(window).resize(function() {
+            gameClient.drawGame();
+        });
 
         // list players and their colors
         gameClient.listPlayers(gameState.users, gameState.players);

@@ -4,6 +4,9 @@ var socket = io();
 // represents our current game
 var gameClient;
 
+// computed multiplier according to user screen
+var multiplier;
+
 // object that represents game state
 var GameClient = function(gameState) {
     // call the parent constructor game, to set the game state
@@ -23,19 +26,48 @@ var GameClient = function(gameState) {
 GameClient.prototype = Object.create(Game.prototype);
 
 GameClient.prototype.drawGame = function() {
-    $("#sokoban").empty();
+    // in order to find correct multiplier we need the max user screen size in height and width
+    var size = $("#game-display").width() > $(window).height() ? $(window).height() : $("#game-display").width();
+
+    // and the max number of rows or columns of stones
+    var max = 0;
     for (var i in this.stones) {
-        $("#sokoban").append('<div class = "stone" style = "top:' + this.stones[i][1] * 32 + 'px;left:' + this.stones[i][0] * 32 + 'px"></div>');
+        if (this.stones[i][0] > max) {
+            max = this.stones[i][0];
+        }
+        if (this.stones[i][1] > max) {
+            max = this.stones[i][1];
+        }
+    }
+
+    // set the multiplier of size based on user screen size
+    multiplier = size / max;
+
+    $("#sokoban").empty();
+    $('#sokoban').css({
+        height: size + 'px',
+        width: size + 'px',
+        'max-height':'100%'
+    });
+
+    for (var i in this.stones) {
+        $("#sokoban").append('<div class = "stone" style = "top:' + this.stones[i][1] * multiplier + 'px;left:' + this.stones[i][0] * multiplier + 'px"></div>');
     }
     for (var i in this.blocks) {
-        $("#sokoban").append('<div id = "b' + this.blocks[i][0] + '_' + this.blocks[i][1] + '" class = "block" style = "z-index:1000;top:' + this.blocks[i][1] * 32 + 'px;left:' + this.blocks[i][0] * 32 + 'px"></div>');
+        $("#sokoban").append('<div id = "b' + this.blocks[i][0] + '_' + this.blocks[i][1] + '" class = "block" style = "z-index:1000;top:' + this.blocks[i][1] * multiplier + 'px;left:' + this.blocks[i][0] * multiplier + 'px"></div>');
     }
     for (var i in this.placeholders) {
-        $("#sokoban").append('<div class = "placeholder" style = "top:' + this.placeholders[i][1] * 32 + 'px;left:' + this.placeholders[i][0] * 32 + 'px"></div>');
+        $("#sokoban").append('<div class = "placeholder" style = "top:' + this.placeholders[i][1] * multiplier + 'px;left:' + this.placeholders[i][0] * multiplier + 'px"></div>');
     }
     for (var player in this.players) {
-        $("#sokoban").append('<div id ="p' + this.players[player].position[0] + '_' + this.players[player].position[1] + '" class = "player" style = "z-index:1000;border-color: ' + this.players[player].color + ';top:' + this.players[player].position[1] * 32 + 'px;left:' + this.players[player].position[0] * 32 + 'px"></div>');
+        $("#sokoban").append('<div id ="p' + this.players[player].position[0] + '_' + this.players[player].position[1] + '" class = "player" style = "z-index:1000;border-color: ' + this.players[player].color + ';top:' + this.players[player].position[1] * multiplier + 'px;left:' + this.players[player].position[0] * multiplier + 'px"></div>');
     }
+
+    // set sizes of each element according to multiplier
+    $('.stone, .placeholder, .block, .player').css({
+        height: multiplier + 'px',
+        width: multiplier + 'px'
+    });
 };
 
 GameClient.prototype.redrawGame = function() {
@@ -45,10 +77,10 @@ GameClient.prototype.redrawGame = function() {
 
     // then redraw those two
     for (var i in this.blocks) {
-        $("#sokoban").append('<div id = "b' + this.blocks[i][0] + '_' + this.blocks[i][1] + '" class = "block" style = "z-index:1000;top:' + this.blocks[i][1] * 32 + 'px;left:' + this.blocks[i][0] * 32 + 'px"></div>');
+        $("#sokoban").append('<div id = "b' + this.blocks[i][0] + '_' + this.blocks[i][1] + '" class = "block" style = "z-index:1000;top:' + this.blocks[i][1] * multiplier + 'px;left:' + this.blocks[i][0] * multiplier + 'px"></div>');
     }
     for (var player in this.players) {
-        $("#sokoban").append('<div id ="p' + this.players[player].position[0] + '_' + this.players[player].position[1] + '" class = "player" style = "z-index:1000;border-color: ' + this.players[player].color + ';top:' + this.players[player].position[1] * 32 + 'px;left:' + this.players[player].position[0] * 32 + 'px"></div>');
+        $("#sokoban").append('<div id ="p' + this.players[player].position[0] + '_' + this.players[player].position[1] + '" class = "player" style = "z-index:1000;border-color: ' + this.players[player].color + ';top:' + this.players[player].position[1] * multiplier + 'px;left:' + this.players[player].position[0] * multiplier + 'px"></div>');
     }
 };
 
@@ -57,24 +89,24 @@ GameClient.prototype.drawMove = function(action, playerId) {
     // (if pushed by our player)
     $("#p" + this.players[playerId].position[0] + "_" +
         this.players[playerId].position[1]).animate({
-        left: "+=" + (action[0] * 32),
-        top: "+=" + (action[1] * 32)
+        left: "+=" + (action[0] * multiplier),
+        top: "+=" + (action[1] * multiplier)
     }, 100).attr("id","p"+(this.players[playerId].position[0] + action[0]) +
         "_" + (this.players[playerId].position[1] + action[1]));
 
     // movement of our player
     $("#p" + (this.players[playerId].position[0] - action[0]) + "_" +
         (this.players[playerId].position[1] - action[1])).animate({
-        left: "+=" + (action[0] * 32),
-        top: "+=" + (action[1] * 32)
+        left: "+=" + (action[0] * multiplier),
+        top: "+=" + (action[1] * multiplier)
     }, 100).attr("id","p"+this.players[playerId].position[0] +
         "_" + this.players[playerId].position[1]);
 
     // movement of block (if pushed by our player)
     $("#b" + this.players[playerId].position[0] + "_" +
         this.players[playerId].position[1]).animate({
-        left: "+=" + (action[0] * 32),
-        top: "+=" + (action[1] * 32)
+        left: "+=" + (action[0] * multiplier),
+        top: "+=" + (action[1] * multiplier)
     }, 100).attr("id","b"+(this.players[playerId].position[0] + action[0]) +
         "_" + (this.players[playerId].position[1] + action[1]));
 };

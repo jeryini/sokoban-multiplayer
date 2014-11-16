@@ -4,6 +4,8 @@ var uuid = require('node-uuid');
 
 // a hash array that will hold games
 // in progress for each room. Key is the id of the room.
+// TODO: We should use in memory database store for current games,
+// TODO: such as Redis.
 var gameRooms = {};
 
 /**
@@ -38,6 +40,7 @@ var GameRoom = function(roomName, levelId, description, userId, socketId) {
     this.owner = this.joinGameRoom(userId, socketId);
 
     // add game room to current game rooms
+    // TODO: Use Redis to store it into in memory cache
     gameRooms[this.roomId] = this;
 };
 

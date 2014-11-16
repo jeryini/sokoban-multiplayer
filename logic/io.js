@@ -183,6 +183,7 @@ io.on('connection', function(socket){
                  room, but before that check if somebody else got it there before. The timeout
                  before destroying the game room should be a few seconds.
                  */
+                // TODO: See about using HTML5 Web Storage API for client side state handling!
                 if (gameRoom.owner === undefined) {
                     deleteGameRoom(socket.roomId);
                     io.sockets.emit('deleteRoom', socket.roomId);
