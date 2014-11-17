@@ -41,7 +41,7 @@ GameClient.prototype.drawGame = function() {
     }
 
     // set the multiplier of size based on user screen size
-    multiplier = size / max;
+    multiplier = (size / max) * 0.9;
 
     $("#sokoban").empty();
     $('#sokoban').css({
@@ -119,9 +119,10 @@ GameClient.prototype.drawMove = function(action, playerId) {
 GameClient.prototype.listPlayers = function(users, players) {
     // first remove current listing
     $("#players").empty();
+    $("#players").append('<ul class="unstyled">');
 
-    for (var user in users) {
-        $("#players").append("<dt>" + user + "</dt><dd>" + players[users[user]] + "</dd>");
+    for (var userId in users) {
+        $("#players ul").append('<li><span class="glyphicon glyphicon-user" aria-hidden="true" style="color: ' + players[users[userId]].color + '">' + userId + '</span></li>');
     }
 };
 

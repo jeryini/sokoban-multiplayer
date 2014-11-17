@@ -16,13 +16,12 @@ socket.on('gameServerState', function(gameState) {
     // TODO: IE9 and less does not support this!
     gameClient = new GameClient(gameState);
 
-
-
-
     // when DOM is fully loaded draw the game state
     $(document).ready(function() {
         // TODO: disable join for returned room
         //$("#" + gameState.roomId + " a")
+        // display game information
+        $('#game').removeClass('hidden');
 
         // draw game from game state
         gameClient.drawGame();
@@ -34,6 +33,24 @@ socket.on('gameServerState', function(gameState) {
 
         // list players and their colors
         gameClient.listPlayers(gameState.users, gameState.players);
+
+        // event handler for swipe events
+        var hammer = new Hammer.Manager(document.getElementById('sokoban'));
+        var swipe = new Hammer.Swipe();
+        hammer.add(swipe);
+
+        hammer.on('swipeleft', function(){
+            gameClient.checkExecuteAction("left");
+        });
+        hammer.on('swipeup', function(){
+            gameClient.checkExecuteAction("up");
+        });
+        hammer.on('swiperight', function(){
+            gameClient.checkExecuteAction("right");
+        });
+        hammer.on('swipedown', function(){
+            gameClient.checkExecuteAction("down");
+        });
 
         // event handler for keyboard events
         $(document).keydown(function (event) {

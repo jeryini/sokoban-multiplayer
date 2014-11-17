@@ -114,10 +114,15 @@ io.on('connection', function(socket){
      * We also get passed in a callback function from client.
      */
     socket.on('executeAction', function(action, blocks, players, fn) {
+        // TODO: Check why is it sometimes executed twice?
+        // TODO: It seems that it is being executed twice for the user
+        // TODO: that connects first?
         console.log('action executed:', action, 'from user', socket.id);
 
         // first we need to get game room of the socket
         var gameRoom = getGameRoom(socket.roomId);
+
+        // TODO: Check if game room exists.
 
         // execute given action on server. If the action is
         // not executable it immediately returns current game state
@@ -155,8 +160,13 @@ io.on('connection', function(socket){
 
     // event when user disconnects
     socket.on('disconnect', function() {
-        // first we need to get game room of the socket
+        // check if user belongs to game room
         var gameRoom = getGameRoom(socket.roomId);
+
+        if (!gameRoom) {
+            console.log('user without game room disconnected');
+            return;
+        }
 
         // get the user that is disconnecting
         var userId = gameRoom.users[socket.id].id;
@@ -203,7 +213,7 @@ io.on('connection', function(socket){
         });
 
         socket.broadcast.to(socket.roomId).emit('chatMessage', "User " + userId + " has left the game.");
-        console.log('user disconnected');
+        console.log('user with game room disconnected');
     });
 
     // event for restarting a game

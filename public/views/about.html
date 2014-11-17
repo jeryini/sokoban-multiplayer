@@ -1,17 +1,17 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" ng-app>
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <!-- ensure proper rendering and touch zooming on mobile devices-->
     <title>Sokoban</title>
+    <!-- include AngularJS asap-->
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.3.2/angular.min.js"></script>
     <!-- css styles-->
     <link rel="stylesheet" href="/bootstrap/css/bootstrap.min.css">
     <link rel="stylesheet" href="/stylesheets/style.css">
     <link rel="stylesheet" href="/stylesheets/sokoban.css">
-    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries-->
-    <!-- WARNING: Respond.js doesn't work if you view the page via file>-->
   </head>
   <!-- Navigation-->
   <nav role="navigation" class="navbar navbar-inverse navbar-fixed-top">
@@ -23,6 +23,7 @@
         <ul class="nav navbar-nav">
           <li><a href="about">About</a></li>
           <li><a href="contact">Contact</a></li>
+          <li><a href="help">Help</a></li>
         </ul>
       </div>
       <!--/.navbar-collapse-->
@@ -31,14 +32,14 @@
   <body>
     <div class="container">
       <div class="row">
-        <h2>About
-          <p>This game was developed as a challenge from Celtra 2014. More about this challenge can be found here.</p>
-        </h2>
+        <h2>About</h2>
+        <p>This game was developed as a response to Celtra programming challenge 2014. More about this challenge can be found <a href="http://www.fri.uni-lj.si/si/raziskave/studentski_izzivi/celtrin_izziv/">here</a>.</p>
       </div>
     </div>
   </body>
   <!-- all of the JavaScript files that need to be-->
   <!-- downloaded to the client-->
+  <script src="//cdn.jsdelivr.net/hammerjs/2.0.4/hammer.min.js"></script>
   <script src="http://code.jquery.com/jquery-1.11.1.min.js"></script>
   <script src="/bootstrap/js/bootstrap.min.js"></script>
   <script src="/socket.io/socket.io.js"></script>

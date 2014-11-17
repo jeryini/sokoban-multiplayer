@@ -2,7 +2,7 @@ extends layout
 
 block content
   .container
-    .row
+    .row.hidden#game
       .col-xs-8#game-display
         h2 Game display
         #sokoban
@@ -18,9 +18,11 @@ block content
             button(type='button').btn.btn-primary Send
 
     .row
-      .col-xs-10
+      .col-xs-9
         .list-group#gameRooms
           h2 Rooms
+          if gameRooms.length == 0
+            div.alert.alert-info(role="alert") There are currently no active game rooms!
           each gameRoom in gameRooms
             div(id=gameRoom.roomId).list-group-item
               h3.list-group-item-heading= gameRoom.roomName
@@ -48,7 +50,7 @@ block content
               .modal-footer
                 button.btn.btn-default(type='button', data-dismiss='modal') Close
                 button#confirm-join-game-room.btn.btn-primary(type='button') Confirm
-      .col-xs-2#new-game-room
+      .col-xs-3#new-game-room
         h2 New multiplayer game
         form(role='form')
           .form-group
@@ -58,9 +60,11 @@ block content
             label(for='game-room-description') Game room description:
             input#game-room-description.form-control(type='text', placeholder='Enter game room description', value="This is game room 4.")
           .form-group
-            label(for='game-server-level') Level id:
-            input#game-server-level.form-control(type='text', placeholder='Enter game level', value="2")
+            label(for='game-server-level') Level:
+            select#game-server-level.form-control(placeholder='Enter game level')
+              each levelId in levels
+                option(value="#{levelId}") #{levelId}
           .form-group
             label(for='player-name') Player name:
             input#player-name.form-control(type='text', placeholder='Enter player name', value="Jernej")
-          a.btn.btn-lg.btn-primary#create-game-room Create
+          input#create-game-room.btn.btn-lg.btn-primary(type='submit', value='Create')

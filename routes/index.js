@@ -1,5 +1,6 @@
 var express = require('express');
 var router = express.Router();
+var gameLevels = require('../levels/levels');
 
 /**
  * GET home page section.
@@ -9,7 +10,7 @@ router.get('/', function(req, res) {
     var gameRooms = require('../logic/gameRoom').gameRooms;
 
     // rooms for display
-    var rooms = [];
+    var rooms = [], levels = [];
 
     // add all current game rooms on the server
     for (var roomId in gameRooms) {
@@ -23,7 +24,13 @@ router.get('/', function(req, res) {
             allPlayers: Object.keys(gameRooms[roomId].gameServer.players).length
         });
     }
-    res.render('index', {title: "Test", gameRooms: rooms });
+
+    // add levels
+    for (var levelId in gameLevels) {
+       levels.push(levelId);
+    }
+
+    res.render('index', {title: "Test", gameRooms: rooms, levels: levels });
 });
 
 /**
@@ -38,6 +45,13 @@ router.get('/about', function(req, res) {
  */
 router.get('/contact', function(req, res) {
     res.render('contact', {title: "Contact"});
+});
+
+/**
+ * GET help section.
+ */
+router.get('/help', function(req, res) {
+    res.render('help', {title: "Help"});
 });
 
 module.exports = router;
