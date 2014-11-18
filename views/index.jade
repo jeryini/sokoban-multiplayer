@@ -3,19 +3,19 @@ extends layout
 block content
   .container
     .row.hidden#game
-      .col-xs-8#game-display
-        h2 Game display
+      .col-xs-6#game-display
+        h3 Game display
         #sokoban
       .col-xs-2
-        h2 Players
+        h3 Players
         dl.dl-horizontal#players
-      .col-xs-2#chat
-        h2 Chat
+      .col-xs-4#chat
+        h3 Chat
         ul#messages
         form(role='form')#form-message
           .form-group
             input#message.form-control(type='text', placeholder='Enter message', autocomplete='off')
-            button(type='button').btn.btn-primary Send
+            button(type='submit').btn.btn-primary Send
 
     .row
       .col-xs-9
@@ -36,35 +36,35 @@ block content
         #modal-join-game-room.modal.fade(tabindex='-1', role='dialog', aria-labelledby='join-game-room-label', aria-hidden='true')
           .modal-dialog
             .modal-content
-              .modal-header
-                button.close(type='button', data-dismiss='modal')
-                  span(aria-hidden='true')&times;
-                  span.sr-only Close
-                h4#join-game-room-label.modal-title Join game room
-              .modal-body
-                form(role='form')
-                  .form-group
-                    label(for='player-name') Player name:
-                    input#player-name.form-control(type='text', placeholder='Enter player name', value="Player 2")
-                    input#game-room-id.hidden(value="")
-              .modal-footer
-                button.btn.btn-default(type='button', data-dismiss='modal') Close
-                button#confirm-join-game-room.btn.btn-primary(type='button') Confirm
+              form#game-room-join(role='form', data-parsley-validate)
+                .modal-header
+                  button.close(type='button', data-dismiss='modal')
+                    span(aria-hidden='true')&times;
+                    span.sr-only Close
+                  h4#join-game-room-label.modal-title Join game room
+                .modal-body
+                    .form-group
+                      label(for='player-name') Player name:
+                      input#player-name.form-control(required, type='text', placeholder='Enter player name', value='Player 2')
+                      input#game-room-id.hidden(value="")
+                .modal-footer
+                  button.btn.btn-default(type='button', data-dismiss='modal') Close
+                  input#confirm-join-game-room.btn.btn-primary(value='Confirm', type='submit')
       .col-xs-3#new-game-room
         h2 New multiplayer game
-        form(role='form')
+        form#game-room-create(role='form', data-parsley-validate)
           .form-group
-            label(for='game-room-name') Game room name:
-            input#game-room-name.form-control(type='text', placeholder='Enter game room name', value="Game room 4")
+            label(for='game-room-name') Game room name * :
+            input#game-room-name.form-control(name='game-room-name', required, type='text', placeholder='Enter game room name', value="Game room X")
           .form-group
             label(for='game-room-description') Game room description:
-            input#game-room-description.form-control(type='text', placeholder='Enter game room description', value="This is game room 4.")
+            input#game-room-description.form-control(name='game-room-description', type='text', placeholder='Enter game room description', value="This is game room X.")
           .form-group
-            label(for='game-server-level') Level:
-            select#game-server-level.form-control(placeholder='Enter game level')
+            label(for='game-server-level') Level * :
+            select#game-room-level.form-control(name='game-server-level', required, placeholder='Enter game level')
               each levelId in levels
                 option(value="#{levelId}") #{levelId}
           .form-group
-            label(for='player-name') Player name:
-            input#player-name.form-control(type='text', placeholder='Enter player name', value="Jernej")
-          input#create-game-room.btn.btn-lg.btn-primary(type='submit', value='Create')
+            label(for='player-name') Player name * :
+            input#game-room-player-name.form-control(name='player-name', required, type='text', placeholder='Enter player name', value="Player 1")
+          input.btn.btn-lg.btn-primary(type='submit', value='Create', style='margin-bottom: 5px;')

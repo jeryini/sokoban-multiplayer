@@ -1,23 +1,23 @@
-/**
- * Socket event for creation of new game room
- */
-socket.on('newGameRoom', function (data) {
-    // TODO: How to replace hard coded HTML code?
-    $("#gameRooms").append('<div id="' + data.roomId + '" class="list-group-item"><h2 class="list-group-item-heading">' + data.roomName
-        + '</h4><p class="list-group-item-text">' + data.description + '</p><p class="list-group-item-text">Chosen level: ' + data.levelId + '</p><p class="list-group-item-text">Players: <span id="playersIn">' + data.playersIn + '</span>/' + data.allPlayers + '</p><a id="' + data.roomId + '" class="btn btn-sm btn-info room">Join</a></div>');
-});
+// when DOM is fully loaded define socket events
+$(function() {
+    /**
+     * Socket event for creation of new game room
+     */
+    socket.on('newGameRoom', function (data) {
+        // TODO: How to replace hard coded HTML code?
+        $("#gameRooms").append('<div id="' + data.roomId + '" class="list-group-item"><h2 class="list-group-item-heading">' + data.roomName
+            + '</h4><p class="list-group-item-text">' + data.description + '</p><p class="list-group-item-text">Chosen level: ' + data.levelId + '</p><p class="list-group-item-text">Players: <span id="playersIn">' + data.playersIn + '</span>/' + data.allPlayers + '</p><a id="' + data.roomId + '" class="btn btn-sm btn-info room">Join</a></div>');
+    });
 
-/**
- * On starting state receive current game state.
- */
-socket.on('gameServerState', function(gameState) {
-    // create a new game client
-    // TODO: Use Object.create instead of new!
-    // TODO: IE9 and less does not support this!
-    gameClient = new GameClient(gameState);
+    /**
+     * On starting state receive current game state.
+     */
+    socket.on('gameServerState', function (gameState) {
+        // create a new game client
+        // TODO: Use Object.create instead of new!
+        // TODO: IE9 and less does not support this!
+        gameClient = new GameClient(gameState);
 
-    // when DOM is fully loaded draw the game state
-    $(document).ready(function() {
         // TODO: disable join for returned room
         //$("#" + gameState.roomId + " a")
         // display game information
@@ -27,7 +27,7 @@ socket.on('gameServerState', function(gameState) {
         gameClient.drawGame();
 
         // add listener to redraw on window resize
-        $(window).resize(function() {
+        $(window).resize(function () {
             gameClient.drawGame();
         });
 
@@ -39,20 +39,21 @@ socket.on('gameServerState', function(gameState) {
         var swipe = new Hammer.Swipe();
         hammer.add(swipe);
 
-        hammer.on('swipeleft', function(){
+        hammer.on('swipeleft', function () {
             gameClient.checkExecuteAction("left");
         });
-        hammer.on('swipeup', function(){
+        hammer.on('swipeup', function () {
             gameClient.checkExecuteAction("up");
         });
-        hammer.on('swiperight', function(){
+        hammer.on('swiperight', function () {
             gameClient.checkExecuteAction("right");
         });
-        hammer.on('swipedown', function(){
+        hammer.on('swipedown', function () {
             gameClient.checkExecuteAction("down");
         });
 
         // event handler for keyboard events
+        // TODO: Disable if typing message!!!
         $(document).keydown(function (event) {
             switch (event.keyCode) {
                 // key press a
@@ -74,85 +75,92 @@ socket.on('gameServerState', function(gameState) {
             }
         });
     });
-});
 
-/**
- * Update the number of players in game.
- */
-socket.on('updatePlayersIn', function (data) {
-    $("#" + data.roomId + " #players-in").text(data.playersIn);
-});
+    /**
+     * Update the number of players in game.
+     */
+    socket.on('updatePlayersIn', function (data) {
+        $("#" + data.roomId + " #players-in").text(data.playersIn);
+    });
 
-socket.on('restart', function (blocks, players) {
-    gameClient.blocks = blocks;
-    gameClient.players = players;
+    socket.on('restart', function (blocks, players) {
+        gameClient.blocks = blocks;
+        gameClient.players = players;
 
-    // redraw game
-    gameClient.drawGame();
-});
+        // redraw game
+        gameClient.drawGame();
+    });
 
-socket.on('newMove', function (action, blocks, players, playerId) {
-    gameClient.blocks = blocks;
-    gameClient.players = players;
-    action = gameClient.actions[action];
+    socket.on('newMove', function (action, blocks, players, playerId) {
+        gameClient.blocks = blocks;
+        gameClient.players = players;
+        action = gameClient.actions[action];
 
-    // animate player movement for given action
-    // and player id
-    gameClient.drawMove(action, playerId);
-});
+        // animate player movement for given action
+        // and player id
+        gameClient.drawMove(action, playerId);
+    });
 
-socket.on('deleteRoom', function (roomId) {
-    $("#" + roomId).empty();
-});
+    socket.on('deleteRoom', function (roomId) {
+        $("#" + roomId).empty();
+    });
 
-/**
- *
- */
-socket.on('gameEnabled', function (enabled) {
-    gameClient.enabled = enabled;
-});
+    /**
+     *
+     */
+    socket.on('gameEnabled', function (enabled) {
+        gameClient.enabled = enabled;
+    });
 
-socket.on('chatMessage', function(message){
-    $('#messages').append($('<li>').text(message));
-});
+    socket.on('chatMessage', function (data) {
+        $('#messages').append($('<li>').text(data.userId + ': ' + data.message));
+    });
 
-// handle button click for creating game room
-$('#create-game-room').click(function() {
-    // send a event to create new game room
-    socket.emit('createGameRoom',
-        $("#game-room-name").val(),
-        $("#game-room-description").val(),
-        $("#game-server-level").val(),
-        $("#player-name").val()
-    );
-});
+    // handle submit of new game room
+    $('#game-room-create').submit(function (evn) {
+        evn.preventDefault();
+
+        if ($(this).parsley().isValid()) {
+            // send a event to create new game room
+            socket.emit('createGameRoom',
+                $("#game-room-name").val(),
+                $("#game-room-description").val(),
+                $("#game-room-level").val(),
+                $("#game-room-player-name").val()
+            );
+        }
+    });
 
 // restart the game
-$('#restart').click(function(){
-    socket.emit('restart');
-});
+    $('#restart').click(function () {
+        socket.emit('restart');
+    });
 
-/**
- * On modal show set the game room id from the clicked input.
- */
-$('#modal-join-game-room').on('show.bs.modal', function(e) {
-    var gameRoomId = $(e.relatedTarget).attr("id");
-    $(e.currentTarget).find('input[id="game-room-id"]').val(gameRoomId);
-});
+    /**
+     * On modal show set the game room id from the clicked input.
+     */
+    $('#modal-join-game-room').on('show.bs.modal', function (e) {
+        var gameRoomId = $(e.relatedTarget).attr("id");
+        $(e.currentTarget).find('input[id="game-room-id"]').val(gameRoomId);
+    });
 
-/**
- * Handle button click for joining game room.
- */
-//$('#gameRooms').on("click", "a", function() {
-$('#confirm-join-game-room').on("click", function() {
-    // join the selected room
-    socket.emit('joinGameRoom', $("#game-room-id").val(), $("#player-name").val());
-    $('#modal-join-game-room').modal('hide')
-});
+    /**
+     * Handle the submit for joining game room.
+     */
+    $('#game-room-join').submit(function (evn) {
+        evn.preventDefault();
 
-$('#form-message').submit(function(){
-    socket.emit('chatMessage', $('#message').val());
-    $('#message').val('');
-    return false;
+        if ($(this).parsley().isValid()) {
+            // join the selected room
+            socket.emit('joinGameRoom', $("#game-room-id").val(), $("#player-name").val());
+            $('#modal-join-game-room').modal('hide');
+        }
+    });
+
+    $('#form-message').submit(function () {
+        socket.emit('chatMessage', $('#message').val());
+        $('#message').val('');
+        return false;
+    });
 });
 

@@ -233,9 +233,10 @@ io.on('connection', function(socket){
      * the second is to the users in current room.
      */
     socket.on('chatMessage', function(message) {
-        // TODO: Implement logic for sending messages
-        // TODO: only to the users in the same room.
-        io.emit('chatMessage', message);
+        var gameRoom = getGameRoom(socket.roomId);
+        if (gameRoom) {
+            io.sockets.in(socket.roomId).emit('chatMessage', {message: message, userId: gameRoom.users[socket.id].id});
+        }
     });
 });
 

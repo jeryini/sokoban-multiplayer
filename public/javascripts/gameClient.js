@@ -119,10 +119,10 @@ GameClient.prototype.drawMove = function(action, playerId) {
 GameClient.prototype.listPlayers = function(users, players) {
     // first remove current listing
     $("#players").empty();
-    $("#players").append('<ul class="unstyled">');
+    $("#players").append('<ul class="list-unstyled">');
 
     for (var userId in users) {
-        $("#players ul").append('<li><span class="glyphicon glyphicon-user" aria-hidden="true" style="color: ' + players[users[userId]].color + '">' + userId + '</span></li>');
+        $("#players ul").append('<li><span class="glyphicon glyphicon-user btn-lg" aria-hidden="true" style="color: ' + players[users[userId]].color + '"> ' + userId + '</span></li>');
     }
 };
 

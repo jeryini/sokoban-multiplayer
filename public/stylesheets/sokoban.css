@@ -45,3 +45,7 @@
 .input-append .btn.dropdown-toggle {
     float: none;
 }
+
+#form-message button {
+    margin-top: 5px;
+}
