@@ -85,10 +85,10 @@ GameRoom.prototype.checkAllPlayersJoined = function() {
 GameRoom.prototype.gameServerState = function(user) {
     // we do not want to sent to the user the socket id
     // of other users, so we will create object, that will
-    // contain userId as a key and player id as a value
+    // contain userId as a key and player as a value
     var users = {};
     for (var socketId in this.users) {
-        users[this.users[socketId].id] = this.users[socketId].player.id;
+        users[this.users[socketId].id] = this.users[socketId].player;
     }
     return {
         roomId: this.roomId,

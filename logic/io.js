@@ -73,6 +73,11 @@ io.on('connection', function(socket){
             return false;
         }
 
+        // check if game room is already full
+        if (gameRoom.gameServer.freePlayers.length == 0) {
+            return false;
+        }
+
         // join the game room, which also returns a new user
         var user = gameRoom.joinGameRoom(userId, socket.id);
 
@@ -85,8 +90,8 @@ io.on('connection', function(socket){
          */
         socket.emit('gameServerState', gameRoom.gameServerState(user));
 
-        // broadcast to other users in room that the player has joined
-        socket.broadcast.to(socket.roomId).emit('chatMessage', "User " + user.id + " has joined the game.");
+        // broadcast to other users the new user
+        socket.broadcast.to(socket.roomId).emit('userJoined', user.id, user.player);
 
         // check if all players have joined
         if (gameRoom.checkAllPlayersJoined()) {
@@ -100,7 +105,8 @@ io.on('connection', function(socket){
         io.sockets.emit('updatePlayersIn', {
             roomId: roomId,
             playersIn: Object.keys(gameRoom.gameServer.players).length -
-                gameRoom.gameServer.freePlayers.length
+                gameRoom.gameServer.freePlayers.length,
+            allPlayers: Object.keys(gameRoom.gameServer.players).length
         });
     });
 
@@ -212,7 +218,7 @@ io.on('connection', function(socket){
                 gameRoom.gameServer.freePlayers.length
         });
 
-        socket.broadcast.to(socket.roomId).emit('chatMessage', "User " + userId + " has left the game.");
+        socket.broadcast.to(socket.roomId).emit('userLeft', userId);
         console.log('user with game room disconnected');
     });
 

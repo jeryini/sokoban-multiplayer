@@ -19,6 +19,9 @@ var GameClient = function(gameState) {
 
     // our player which the server assigned to us
     this.player = gameState.player;
+
+    // users
+    this.users = gameState.users;
 };
 
 // set parent class to Game
@@ -116,14 +119,22 @@ GameClient.prototype.drawMove = function(action, playerId) {
  *
  * @param players
  */
-GameClient.prototype.listPlayers = function(users, players) {
+GameClient.prototype.listPlayers = function() {
     // first remove current listing
     $("#players").empty();
     $("#players").append('<ul class="list-unstyled">');
 
-    for (var userId in users) {
-        $("#players ul").append('<li><span class="glyphicon glyphicon-user btn-lg" aria-hidden="true" style="color: ' + players[users[userId]].color + '"> ' + userId + '</span></li>');
+    for (var userId in this.users) {
+        $("#players ul").append('<li><span class="glyphicon glyphicon-user btn-lg" aria-hidden="true" style="color: ' + this.users[userId].color + '"> ' + userId + '</span></li>');
     }
+};
+
+GameClient.prototype.userJoin = function(userId, player) {
+    this.users[userId] = player;
+};
+
+GameClient.prototype.userLeft = function(userId) {
+    delete this.users[userId];
 };
 
 // execute given action from the given player id

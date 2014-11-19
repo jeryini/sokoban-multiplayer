@@ -22,7 +22,7 @@ block content
         .list-group#gameRooms
           h2 Rooms
           if gameRooms.length == 0
-            div.alert.alert-info(role="alert") There are currently no active game rooms!
+            #no-active-game-rooms.alert.alert-info(role="alert") There are currently no active game rooms!
           each gameRoom in gameRooms
             div(id=gameRoom.roomId).list-group-item
               h3.list-group-item-heading= gameRoom.roomName
@@ -31,7 +31,7 @@ block content
               p.list-group-item-text Players:
                 span#players-in #{gameRoom.playersIn}
                 /#{gameRoom.allPlayers}
-              a(id=gameRoom.roomId, href="#modal-join-game-room", data-toggle="modal").btn.btn-sm.btn-info.room Join
+              button(id=gameRoom.roomId, href="#modal-join-game-room", data-toggle="modal", disabled=gameRoom.playersIn === gameRoom.allPlayers).btn.btn-sm.btn-info.room Join
         // Modal
         #modal-join-game-room.modal.fade(tabindex='-1', role='dialog', aria-labelledby='join-game-room-label', aria-hidden='true')
           .modal-dialog

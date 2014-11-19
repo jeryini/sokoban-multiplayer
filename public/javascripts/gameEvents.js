@@ -4,9 +4,15 @@ $(function() {
      * Socket event for creation of new game room
      */
     socket.on('newGameRoom', function (data) {
-        // TODO: How to replace hard coded HTML code?
-        $("#gameRooms").append('<div id="' + data.roomId + '" class="list-group-item"><h2 class="list-group-item-heading">' + data.roomName
-            + '</h4><p class="list-group-item-text">' + data.description + '</p><p class="list-group-item-text">Chosen level: ' + data.levelId + '</p><p class="list-group-item-text">Players: <span id="playersIn">' + data.playersIn + '</span>/' + data.allPlayers + '</p><a id="' + data.roomId + '" class="btn btn-sm btn-info room">Join</a></div>');
+        // remove the info about the no active game rooms
+        $("#no-active-game-rooms").remove();
+
+        $("#gameRooms").append('<div id="' + data.roomId + '" class="list-group-item"><h3 class="list-group-item-heading">' + data.roomName
+            + '</h3><p class="list-group-item-text">' + data.description + '</p><p class="list-group-item-text">Chosen level: ' + data.levelId + '</p><p class="list-group-item-text">Players: <span id="players-in">' + data.playersIn + '</span>/' + data.allPlayers + '</p><button id="' + data.roomId + '" href="#modal-join-game-room" data-toggle="modal" class="btn btn-sm btn-info room">Join</button></div>');
+
+        if (data.playersIn == data.allPlayers) {
+            $('#' + data.roomId + ' button').prop('disabled', true);
+        }
     });
 
     /**
@@ -32,7 +38,7 @@ $(function() {
         });
 
         // list players and their colors
-        gameClient.listPlayers(gameState.users, gameState.players);
+        gameClient.listPlayers();
 
         // event handler for swipe events
         var hammer = new Hammer.Manager(document.getElementById('sokoban'));
@@ -81,6 +87,21 @@ $(function() {
      */
     socket.on('updatePlayersIn', function (data) {
         $("#" + data.roomId + " #players-in").text(data.playersIn);
+        if (data.playersIn == data.allPlayers) {
+            $('#' + data.roomId + ' button').prop('disabled', true);
+        }
+    });
+
+    socket.on('userJoined', function (userId, player) {
+        $('#messages').append($('<li>').append('User <span style="color: ' + player.color + '; font-weight: bold;">' + userId + '</span> has joined the game.'));
+        gameClient.userJoin(userId, player);
+        gameClient.listPlayers();
+    });
+
+    socket.on('userLeft', function (userId) {
+        $('#messages').append($('<li>').append('User <span style="color: ' + gameClient.users[userId].color + '; font-weight: bold;">' + userId + '</span> has left the game.'));
+        gameClient.userLeft(userId);
+        gameClient.listPlayers();
     });
 
     socket.on('restart', function (blocks, players) {
@@ -113,7 +134,7 @@ $(function() {
     });
 
     socket.on('chatMessage', function (data) {
-        $('#messages').append($('<li>').text(data.userId + ': ' + data.message));
+        $('#messages').append($('<li>').append('<span style="color: ' + gameClient.users[data.userId].color + '; font-weight: bold;">' + data.userId + ':</span> ' + data.message));
     });
 
     // handle submit of new game room
