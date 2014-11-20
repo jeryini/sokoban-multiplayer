@@ -1,9 +1,15 @@
+/** @module gameServer */
 var Game = require('../public/javascripts/game');
 var Player = require('./player');
 var levels = require('../levels/levels');
 
 /**
- * Server side game class with additional fields.
+ * Creates a new instance of class that represents game state on server side.
+ * Calls the parent constructor of Game class to set the game state.
+ *
+ * @class This class inherits from the Game class.
+ *
+ * @property {number} levelId Level of the game.
  */
 var GameServer = function(levelId) {
     this.createdAt = Date.now();
@@ -22,33 +28,38 @@ var GameServer = function(levelId) {
     this.levelId = levelId;
 };
 
-// set the prototype to the main class
-// this way we can inherit properties from Game
+// create a GameServer.prototype that inherits from Game.prototype
 GameServer.prototype = Object.create(Game.prototype);
 
+// set the "constructor" property to refer to the GameServer
+GameServer.prototype.constructor = GameServer;
+
 /**
- * Execute action differs from the implementation on the client side.
+ * Check for execution of given action.
  *
- * @param action
- * @param playerId
- * @returns {*}
+ * @param {string} actionName The name of the action to execute.
+ * @param {number} playerId The id of the player.
+ * @returns {boolean} If the action was successfully executed for a given player.
  */
-Game.prototype.checkExecuteAction = function(action, playerId) {
-    // first check if action is even possible
-    if (!(action in this.actions)) {
+GameServer.prototype.checkExecuteAction = function(actionName, playerId) {
+    // first check if action is even possible as we cannot trust the user :)
+    if (!(actionName in this.actions)) {
         return false;
     }
 
-    // get action from dictionary
-    action = this.actions[action];
-
-    // try to execute given action for user
-    return this.executeAction(action, playerId);
+    // execute action for given user
+    return this.executeAction(this.actions[actionName], playerId);
 };
 
 
 /**
- * Check if game state matches
+ * Check if game state on client side matches game state on server side.
+ * The function accepts only block and player position, because position of
+ * stones and placeholders does not change.
+ *
+ * @param {} blocks
+ * @param {} players
+ * @returns {boolean} Returns true if game state is synchronized, otherwise false.
  */
 GameServer.prototype.synchronized = function(blocks, players) {
     for (var block in this.blocks) {
@@ -68,7 +79,7 @@ GameServer.prototype.synchronized = function(blocks, players) {
 };
 
 /**
- * Set the game state from image is only defined for server side.
+ * Set the game state from image.
  * The following rules apply:
  * . are placeholders
  * # are stones
@@ -76,10 +87,10 @@ GameServer.prototype.synchronized = function(blocks, players) {
  * * are blocks on placeholder position
  * numbers from 0 to n are player positions
  *
- * @param gameImage
+ * @param {string[]} levelImage Level represented as image.
  * @returns {{stones: {}, blocks: {}, placeholders: {}, players: {}, freePlayers: Array}}
  */
-GameServer.prototype.setGameStateFromImage = function(gameImage) {
+GameServer.prototype.setGameStateFromImage = function(levelImage) {
     var gameState = {
         stones: {},
         blocks: {},
@@ -112,7 +123,7 @@ GameServer.prototype.setGameStateFromImage = function(gameImage) {
     // game currently enables up to 9 different players
     for (var i = 0; i <= 9; i++) {
         setFunction[i] = function(position) {
-            var playerId = gameImage[position[1]][position[0]];
+            var playerId = levelImage[position[1]][position[0]];
 
             // create a new player
             var player = Object.create(Player.prototype);
@@ -129,13 +140,13 @@ GameServer.prototype.setGameStateFromImage = function(gameImage) {
     }
 
     // read image, first iterate over rows
-    for (var y = 0; y < gameImage.length; y++) {
+    for (var y = 0; y < levelImage.length; y++) {
         // then over columns
-        for (var x = 0; x < gameImage[y].length; x++) {
+        for (var x = 0; x < levelImage[y].length; x++) {
             // check if the function is defined for
             // given character
-            if (gameImage[y][x] in setFunction) {
-                setFunction[gameImage[y][x]]([x, y]);
+            if (levelImage[y][x] in setFunction) {
+                setFunction[levelImage[y][x]]([x, y]);
             }
         }
     }
@@ -144,4 +155,5 @@ GameServer.prototype.setGameStateFromImage = function(gameImage) {
     return gameState;
 };
 
+/** GameServer class to export. */
 module.exports = GameServer;
