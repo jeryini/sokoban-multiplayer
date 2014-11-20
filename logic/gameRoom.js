@@ -1,42 +1,39 @@
+/** @module gameRoom */
 var User = require('./user');
 var GameServer = require('./gameServer');
 var uuid = require('node-uuid');
 
-// a hash array that will hold games
-// in progress for each room. Key is the id of the room.
-// TODO: We should use in memory database store for current games,
-// TODO: such as Redis.
+/** A hash array that will hold games in progress for each room. Key is the id of the room. */
+// TODO: We should use in memory database store for current games, such as Redis.
 var gameRooms = {};
 
 /**
- * A main class for game room.
+ * Creates a new instance of class that represents game room on server side.
  *
- * @param roomName
- * @param levelId
- * @param description
- * @param userId
- * @param socketId
- * @constructor
+ * @class This class does not inherit from any class.
+ *
+ * @param {string} roomName The name of the room.
+ * @param {number} levelId The id of the game level.
+ * @param {string} description The description of the room.
+ * @param {number} userId The id/name of the user.
+ * @param {string} socketId The id of the user connection.
  */
 var GameRoom = function(roomName, levelId, description, userId, socketId) {
-    // id of the room, generated from a standard UUID v1
-    // for generating identifiers
+    /** id of the room, generated from a standard UUID v1 for generating identifiers */
     this.roomId = uuid.v1();
 
-    // name of the room
     this.roomName = roomName;
 
-    // create a game for specified level
+    /** create a game on server side for specified level */
     this.gameServer = Object.create(GameServer.prototype);
     GameServer.call(this.gameServer, levelId);
 
-    // description of the room
     this.description = description;
 
-    // all users that are currently connected to this room
+    /** all users that are currently connected to this room */
     this.users = {};
 
-    // id of the creator
+    /** join game room for the room creator and save it as a owner */
     this.owner = this.joinGameRoom(userId, socketId);
 
     // add game room to current game rooms
@@ -45,7 +42,12 @@ var GameRoom = function(roomName, levelId, description, userId, socketId) {
 };
 
 /**
- * Create a new player, save it and return it
+ * Create a new player, then user and save it to current users in
+ * game room.
+ *
+ * @param {string} userId The user id/name.
+ * @param {number} socketId The user connection id.
+ * @returns {User} New user.
  */
 GameRoom.prototype.joinGameRoom = function(userId, socketId) {
     // pop the first available player. If the player is not
@@ -56,7 +58,7 @@ GameRoom.prototype.joinGameRoom = function(userId, socketId) {
     User.call(user, userId, socketId, player);
     this.users[socketId] = user;
     // also check if there is no owner. If it is missing,
-    // then set it to the current user
+    // then set it to the current user.
     if (this.owner === undefined) {
         this.owner = user;
     }
@@ -64,8 +66,11 @@ GameRoom.prototype.joinGameRoom = function(userId, socketId) {
 };
 
 /**
- * Check if all slots are taken for current game.
+ * Check if all players are taken for current game. It also sets if
+ * the game server is enabled. This is only checked before game begins.
+ * If the user leaves the game in the mean time, this will not be called!
  *
+ * @returns {boolean}
  */
 GameRoom.prototype.checkAllPlayersJoined = function() {
     // once the game is enabled do not check if all players are in
@@ -81,6 +86,9 @@ GameRoom.prototype.checkAllPlayersJoined = function() {
 /**
  * Create game server state object for client. We do not want to send
  * full game server state to the user.
+ *
+ * @param user
+ * @returns {{roomId: *, player: (*|User.player|GameClient.player), users: {}, stones: (*|gameState.stones|{}|Object|Game.stones), blocks: *, placeholders: (*|gameState.placeholders|{}|Object|Game.placeholders), players: (*|gameState.players|players|{}|Object|Game.players)}}
  */
 GameRoom.prototype.gameServerState = function(user) {
     // we do not want to sent to the user the socket id
@@ -90,6 +98,7 @@ GameRoom.prototype.gameServerState = function(user) {
     for (var socketId in this.users) {
         users[this.users[socketId].id] = this.users[socketId].player;
     }
+    this.gameServer.game
     return {
         roomId: this.roomId,
         player: user.player,
@@ -102,10 +111,12 @@ GameRoom.prototype.gameServerState = function(user) {
 };
 
 /**
- * Transfer ownership if the passed id is the owner of the game.
+ * Transfer ownership to the next player if the passed id is the owner of the game.
+ *
+ * @param {string} disconnectedSocketId The socket id of the user, that has disconnected from the room.
  */
 GameRoom.prototype.transferOwnership = function(disconnectedSocketId) {
-    // then check if disconnected user is owner of the room
+    // check if disconnected user is owner of the room
     if (this.owner.socketId == disconnectedSocketId) {
         // set it to undefined
         this.owner = undefined;
@@ -123,17 +134,23 @@ GameRoom.prototype.transferOwnership = function(disconnectedSocketId) {
 /**
  * Get the game room from the current games on the server.
  *
- * @param roomId
+ * @param {string} roomId The UUID room id.
+ * @returns {GameRoom}
  */
 var getGameRoom = function(roomId) {
     return gameRooms[roomId];
 };
 
+/**
+ * Delete the game room from the current games on the server.
+ *
+ * @param {string} roomId The id of the room to delete.
+ */
 var deleteGameRoom = function(roomId) {
     delete gameRooms[roomId];
 };
 
-// export the game rooms currently underway on server
+/** Export the game rooms currently underway on server */
 module.exports = {
     gameRooms: gameRooms,
     GameRoom: GameRoom,

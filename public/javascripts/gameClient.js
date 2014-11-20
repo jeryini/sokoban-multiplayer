@@ -138,31 +138,23 @@ GameClient.prototype.userLeft = function(userId) {
 };
 
 // execute given action from the given player id
-GameClient.prototype.checkExecuteAction = function(action) {
+GameClient.prototype.checkExecuteAction = function(actionName) {
     // check if playing is enabled
     if (!this.enabled) {
         $('#messages').append($('<li>').text("Please wait for all players to join!"));
         return false;
     }
-    var actionName = action;
-
-    // first check if action is even possible
-    if (!(action in this.actions)) {
-        return false;
-    }
-    // get action from dictionary
-    action = this.actions[action];
 
     // execute action on client side. If the passed action
     // is possible then it executes the action (changes
     // game state) and returns true. Only if action is executable
     // go check on server for acknowledgment.
-    if (!(this.executeAction(action, this.player.id))) {
+    if (!(this.executeAction(this.actions[actionName], this.player.id))) {
         return false;
     }
 
     // first draw our move on client
-    this.drawMove(action, this.player.id);
+    this.drawMove(this.actions[actionName], this.player.id);
     var gameClient = this;
     /**
      * Emit action to server for a current room and register a callback

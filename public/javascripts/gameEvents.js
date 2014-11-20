@@ -46,16 +46,16 @@ $(function() {
         hammer.add(swipe);
 
         hammer.on('swipeleft', function () {
-            gameClient.checkExecuteAction("left");
+            gameClient.checkExecuteAction("LEFT");
         });
         hammer.on('swipeup', function () {
-            gameClient.checkExecuteAction("up");
+            gameClient.checkExecuteAction("UP");
         });
         hammer.on('swiperight', function () {
-            gameClient.checkExecuteAction("right");
+            gameClient.checkExecuteAction("RIGHT");
         });
         hammer.on('swipedown', function () {
-            gameClient.checkExecuteAction("down");
+            gameClient.checkExecuteAction("DOWN");
         });
 
         // event handler for keyboard events
@@ -64,19 +64,19 @@ $(function() {
             switch (event.keyCode) {
                 // key press a
                 case 65:
-                    gameClient.checkExecuteAction("left");
+                    gameClient.checkExecuteAction("LEFT");
                     break;
                 // key press w
                 case 87:
-                    gameClient.checkExecuteAction("up");
+                    gameClient.checkExecuteAction("UP");
                     break;
                 // key press d
                 case 68:
-                    gameClient.checkExecuteAction("right");
+                    gameClient.checkExecuteAction("RIGHT");
                     break;
                 // key press s
                 case 83:
-                    gameClient.checkExecuteAction("down");
+                    gameClient.checkExecuteAction("DOWN");
                     break;
             }
         });

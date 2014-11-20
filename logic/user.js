@@ -1,10 +1,14 @@
+/** @module user */
+
 /**
- * User class.
+ * Creates a new instance of class that represents single user.
  *
- * @param userId
- * @param socketId
- * @param player
- * @constructor
+ * @class This class is an abstraction of the connected user and a bridge
+ * between user and the in game player.
+ *
+ * @property {string} id User id/name.
+ * @property {string} socketId Unique socket identification of the connected user.
+ * @property {Object} player In game player. If user is a spectator, then this value is null.
  */
 var User = function(id, socketId, player) {
     this.id = id;
@@ -12,4 +16,5 @@ var User = function(id, socketId, player) {
     this.player = player;
 };
 
+/** Export User class.  */
 module.exports = User;

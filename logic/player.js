@@ -1,11 +1,13 @@
+/** @module player */
+
 /**
- * Each user that actively participates in the game
- * has a player with a unique id, position and color.
+ * Creates a new instance of class that represents single player.
  *
- * @param id
- * @param position
- * @param color
- * @constructor
+ * @class This class represents in game player.
+ *
+ * @param {number} id The id of the player.
+ * @param {number[]} position The current 2D position in game.
+ * @param {string} color The color of the player.
  */
 var Player = function(id, position, color) {
     this.id = id;
@@ -13,4 +15,5 @@ var Player = function(id, position, color) {
     this.color = color;
 };
 
+/** Export Player class.  */
 module.exports = Player;

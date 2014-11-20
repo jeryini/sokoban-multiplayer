@@ -119,11 +119,11 @@ io.on('connection', function(socket){
      *
      * We also get passed in a callback function from client.
      */
-    socket.on('executeAction', function(action, blocks, players, fn) {
+    socket.on('executeAction', function(actionName, blocks, players, fn) {
         // TODO: Check why is it sometimes executed twice?
         // TODO: It seems that it is being executed twice for the user
         // TODO: that connects first?
-        console.log('action executed:', action, 'from user', socket.id);
+        console.log('action executed:', actionName, 'from user', socket.id);
 
         // first we need to get game room of the socket
         var gameRoom = getGameRoom(socket.roomId);
@@ -136,7 +136,7 @@ io.on('connection', function(socket){
         // is synchronized as the action should be executable if client
         // send it to the server (it implicitly means that the state
         // does not match).
-        var isExecuted = gameRoom.gameServer.checkExecuteAction(action, gameRoom.users[socket.id].player.id);
+        var isExecuted = gameRoom.gameServer.checkExecuteAction(actionName, gameRoom.users[socket.id].player.id);
         if (!isExecuted) {
             fn({
                 'synchronized': false,
@@ -160,7 +160,7 @@ io.on('connection', function(socket){
         // for given room
         // we need to send player id and action to execute
         // for given player id
-        socket.broadcast.to(socket.roomId).emit('newMove', action, gameRoom.gameServer.blocks,
+        socket.broadcast.to(socket.roomId).emit('newMove', actionName, gameRoom.gameServer.blocks,
             gameRoom.gameServer.players, gameRoom.users[socket.id].player.id);
     });
 

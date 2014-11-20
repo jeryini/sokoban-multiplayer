@@ -23,8 +23,6 @@ var GameServer = function(levelId) {
 
     // free players
     this.freePlayers = gameState.freePlayers;
-
-    // save the chosen level
     this.levelId = levelId;
 };
 
