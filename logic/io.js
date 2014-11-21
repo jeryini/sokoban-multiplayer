@@ -1,6 +1,8 @@
+/** @module io */
 var GameRoom = require('./gameRoom').GameRoom;
 var getGameRoom = require('./gameRoom').getGameRoom;
 var deleteGameRoom = require('./gameRoom').deleteGameRoom;
+var levels = require('../levels/levels');
 
 // initialize socket without server arg!
 var io = require('socket.io')();
@@ -10,7 +12,7 @@ var io = require('socket.io')();
  * It fires every time a new client connects.
  *
  * @event SocketIO#connection
- * @param socket
+ * @param socket Socket of the connected user.
  */
 io.on('connection', function(socket){
     /**************** Events from users ****************/
@@ -18,16 +20,16 @@ io.on('connection', function(socket){
     console.log('a user connected with id: ' + socket.id);
 
     /**
-     * Event from client for creating a room.
+     * Event from client for creating a new game room.
      *
-     * @event SocketIO#createRoom
-     * @param roomId, levelId, description, playerId
+     * @event SocketIO#createGameRoom
+     * @param {string} roomName The name of the new game room.
+     * @param {string} description The description of the game room.
+     * @param {number} levelId The id of the level.
+     * @param {string} playerId The player id/name.
      */
     socket.on('createGameRoom', function(roomName, description, levelId, userId) {
         // create a new game room
-        // also pass in socket id of the creator
-        // TODO: Should this be asynchronous so that it does not block main
-        // TODO: thread?
         var gameRoom = Object.create(GameRoom.prototype);
         GameRoom.call(gameRoom, roomName, levelId, description, userId, socket.id);
 
@@ -60,16 +62,18 @@ io.on('connection', function(socket){
 
     /**
      * Event for joining a game room.
+     *
+     * @event SocketIO#joinGameRoom
+     * @param {string} roomId The UUID of the game room.
+     * @param {number} userId The id of the user who wants to join.
      */
     socket.on('joinGameRoom', function(roomId, userId) {
-        // TODO: Check that game room was not deleted in mean time
         // first we need to get the game room from the passed id
         var gameRoom = getGameRoom(roomId);
 
-        // check that game room exists
+        // check that game room exists, it is possible that game room
+        // gets deleted in mean time
         if (!gameRoom) {
-            // inform user that the game room does not exist
-            io.to(socket.id).emit('chatMessage', "The selected game room does not exist anymore!");
             return false;
         }
 
@@ -82,12 +86,12 @@ io.on('connection', function(socket){
         var user = gameRoom.joinGameRoom(userId, socket.id);
 
         // join the room on socket level
+        // TODO: Check if user is already joined in other room.
+        // TODO: If it is, then we need to remove him from that room first.
         socket.join(roomId);
         socket.roomId = roomId;
 
-        /**
-         * Send starting state to user.
-         */
+        // send starting state to the user.
         socket.emit('gameServerState', gameRoom.gameServerState(user));
 
         // broadcast to other users the new user
@@ -99,9 +103,7 @@ io.on('connection', function(socket){
             io.sockets.in(socket.roomId).emit('gameEnabled', true);
         }
 
-        /**
-         * Update the number of players in game.
-         */
+        // update the number of players in game.
         io.sockets.emit('updatePlayersIn', {
             roomId: roomId,
             playersIn: Object.keys(gameRoom.gameServer.players).length -
@@ -112,32 +114,46 @@ io.on('connection', function(socket){
 
     /**
      * Event for executing a action, where action can be:
-     * - up
-     * - down
-     * - left
-     * - right
+     * - UP
+     * - DOWN
+     * - LEFT
+     * - RIGHT
+     * Now when the user executes action, the game rules are first check on client side.
+     * If everything is OK according to game rules, the action is immediately executed on client side.
+     * Only then is executed action sent to the server to check against game rules on server side and
+     * to check if game state is synchronized. The big difference is, that the user does not wait for
+     * a response from server to execute action, but only checks for acknowledge of the action for
+     * possible undo of the executed action. This means that for a fraction of the time, the client
+     * side is small step ahead of the server side. This idea was taken from the following two sources:
+     * http://gafferongames.com/networking-for-game-programmers/what-every-programmer-needs-to-know-about-game-networking/
+     * https://developer.valvesoftware.com/wiki/Source_Multiplayer_Networking
      *
-     * We also get passed in a callback function from client.
+     * @event SocketIO#executeAction
+     * @param {string} actionName One of the four possible actions.
+     * @param {} blocks Current block position on the client side of the user, that executed a new action.
+     * @param {} players Current players position on the client side of the user.
+     * @param {} fn The callback function to call on the client side.
      */
     socket.on('executeAction', function(actionName, blocks, players, fn) {
-        // TODO: Check why is it sometimes executed twice?
-        // TODO: It seems that it is being executed twice for the user
-        // TODO: that connects first?
         console.log('action executed:', actionName, 'from user', socket.id);
 
         // first we need to get game room of the socket
         var gameRoom = getGameRoom(socket.roomId);
 
-        // TODO: Check if game room exists.
+        if (!gameRoom) {
+            return false;
+        }
 
-        // execute given action on server. If the action is
+        // Execute given action on server. If the action is
         // not executable it immediately returns current game state
         // on the server. It does not even go checking if game state
         // is synchronized as the action should be executable if client
-        // send it to the server (it implicitly means that the state
-        // does not match).
+        // send it to the server (it implicitly means that the game state
+        // on the client side does not match with game state on the server side).
         var isExecuted = gameRoom.gameServer.checkExecuteAction(actionName, gameRoom.users[socket.id].player.id);
         if (!isExecuted) {
+            // callback on the client side with new game state, i.e. with player
+            // positions and blocks position
             fn({
                 'synchronized': false,
                 'blocks': gameRoom.gameServer.blocks,
@@ -146,32 +162,40 @@ io.on('connection', function(socket){
             return false;
         }
 
-        // now check if game state is synchronized
+        // the client action is executable, but now we need to check if game
+        // state is synchronized
         if (gameRoom.gameServer.synchronized(blocks, players)) {
             fn({'synchronized': true});
         } else {
+            // the game state on client side does not match with game state on
+            // server side. Send client new state.
             fn({
                 'synchronized': false,
                 'blocks': gameRoom.gameServer.blocks,
                 'players': gameRoom.gameServer.players
             });
         }
-        // emit new move to all other players (broadcast)
-        // for given room
-        // we need to send player id and action to execute
-        // for given player id
+
+        // emit new move to all other players (broadcast) for given room.
+        // We need to send player id and action to execute for given player id.
+        // We also send new game state, to check on client side of the users, if
+        // their game state matches after executing the received action.
         socket.broadcast.to(socket.roomId).emit('newMove', actionName, gameRoom.gameServer.blocks,
             gameRoom.gameServer.players, gameRoom.users[socket.id].player.id);
     });
 
-    // event when user disconnects
+    /**
+     * Event when user disconnects.
+     *
+     * @event SocketIO#disconnect
+     */
     socket.on('disconnect', function() {
         // check if user belongs to game room
         var gameRoom = getGameRoom(socket.roomId);
 
         if (!gameRoom) {
-            console.log('user without game room disconnected');
-            return;
+            console.log('user without being connected to game room disconnected');
+            return false;
         }
 
         // get the user that is disconnecting
@@ -182,8 +206,9 @@ io.on('connection', function(socket){
         gameRoom.transferOwnership(socket.id);
 
         // if owner is still undefined, then there is no player left,
-        // delete the room
+        // delete the game room
         if (gameRoom.owner === undefined) {
+            // delete it after 5s
             setTimeout(function() {
                 // TODO: Check if someone else took the ownership of the room
                 /*
@@ -200,12 +225,15 @@ io.on('connection', function(socket){
                  before destroying the game room should be a few seconds.
                  */
                 // TODO: See about using HTML5 Web Storage API for client side state handling!
+                // we need to check if in the meantime the ownership of the game
+                // room was taken by some other user
                 if (gameRoom.owner === undefined) {
                     deleteGameRoom(socket.roomId);
                     io.sockets.emit('deleteRoom', socket.roomId);
                 }
-            }, 20000);
+            }, 5000);
         }
+
         // free player from game
         gameRoom.gameServer.freePlayers.push(gameRoom.users[socket.id].player.id);
 
@@ -218,33 +246,48 @@ io.on('connection', function(socket){
                 gameRoom.gameServer.freePlayers.length
         });
 
+        // broadcast to other users in the same room that the user has left
+        // the game room
         socket.broadcast.to(socket.roomId).emit('userLeft', userId);
         console.log('user with game room disconnected');
     });
 
-    // event for restarting a game
-    socket.on('restart', function(msg){
-        // TODO: Fix restart!
-        gameServer.blocks = {};
-        gameServer.players = {};
-        gameServer.setGameStateFromImage();
+    /**
+     * Event for restarting a game server.
+     *
+     * @event SocketIO#restart
+     */
+    socket.on('restart', function(){
+        var gameRoom = getGameRoom(socket.roomId);
 
-        // send message to everyone, including the sender
-        io.emit('restart', gameServer.blocks, gameServer.players);
+        if (!gameRoom) {
+            return false;
+        }
+
+        // set them to empty
+        gameRoom.gameServer.blocks = {};
+        gameRoom.gameServer.players = {};
+
+        gameRoom.gameServer.setGameStateFromImage(levels[gameRoom.gameServer.levelId]);
+
+        // send message to everyone in the game room, including the sender
+        io.sockets.in(socket.roomId).emit('restart', gameRoom.gameServer.blocks, gameRoom.gameServer.players);
     });
 
     /**
-     * A event handler for incoming message.We distinguish two
-     * types of incoming messages, the first is to all users and
-     * the second is to the users in current room.
+     * A event handler for incoming message in the game room.
+     *
+     * @event SocketIO#restart
      */
     socket.on('chatMessage', function(message) {
         var gameRoom = getGameRoom(socket.roomId);
         if (gameRoom) {
+            // send message to all users in the game room
             io.sockets.in(socket.roomId).emit('chatMessage', {message: message, userId: gameRoom.users[socket.id].id});
         }
     });
 });
 
+/** Export io. */
 module.exports = io;
 

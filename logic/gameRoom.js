@@ -87,7 +87,7 @@ GameRoom.prototype.checkAllPlayersJoined = function() {
  * Create game server state object for client. We do not want to send
  * full game server state to the user.
  *
- * @param user
+ * @param {Player} user The Player object that is assigned for the user.
  * @returns {{roomId: *, player: (*|User.player|GameClient.player), users: {}, stones: (*|gameState.stones|{}|Object|Game.stones), blocks: *, placeholders: (*|gameState.placeholders|{}|Object|Game.placeholders), players: (*|gameState.players|players|{}|Object|Game.players)}}
  */
 GameRoom.prototype.gameServerState = function(user) {

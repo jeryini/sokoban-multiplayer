@@ -113,6 +113,10 @@ $(function() {
     });
 
     socket.on('newMove', function (action, blocks, players, playerId) {
+        // TODO: First try to execute given action and compare game states
+        // TODO: If they do not match with state sent from server, then
+        // TODO: completely redraw the game state, otherwise draw only the
+        // TODO: selected move
         gameClient.blocks = blocks;
         gameClient.players = players;
         action = gameClient.actions[action];
