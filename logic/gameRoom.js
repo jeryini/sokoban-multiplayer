@@ -111,6 +111,58 @@ GameRoom.prototype.gameServerState = function(user) {
 };
 
 /**
+ * Remove the user from game room. There are three possible sources, when
+ * this needs to happen:
+ * 1. User disconnects, i.e. closes tab/browser
+ * 2. User joins another room.
+ * 3. User creates a new room.
+ * We need to first transfer ownership of the game. Of course this only happens
+ * if the user is the owner of the game room. Then we need to free player from
+ * the game and remove the current user. Also we need a check if there is owner left.
+ * If it is not, the game room should eventually be removed.
+ *
+ * @param {} socket Socket of the user.
+ * @param {} io Socket.io
+ */
+GameRoom.prototype.removeUserFromGame = function(socket, io) {
+    var user = this.users[socket.id];
+
+    // transfer ownership of the game room
+    this.transferOwnership(socket.id);
+
+    // if owner is still undefined, then there is no player left,
+    // delete the game room
+    if (this.owner === undefined) {
+        var roomId = socket.roomId;
+        // delete it after 5s
+        setTimeout(function() {
+            // we need to check if in the meantime the ownership of the game
+            // room was taken by some other user
+            if (this.owner === undefined) {
+                delete gameRooms[roomId];
+                io.sockets.emit('deleteRoom', roomId);
+            }
+        }, 5000);
+    }
+
+    // free player from game
+    this.gameServer.freePlayers.push(this.users[socket.id].player.id);
+
+    // remove user from game room
+    delete this.users[socket.id];
+
+    io.sockets.emit('updatePlayersIn', {
+        roomId: this.roomId,
+        playersIn: Object.keys(this.gameServer.players).length -
+            this.gameServer.freePlayers.length
+    });
+
+    // broadcast to other users in the same room that the user has left
+    // the game room
+    socket.broadcast.to(this.roomId).emit('userLeft', user.id);
+};
+
+/**
  * Transfer ownership to the next player if the passed id is the owner of the game.
  *
  * @param {string} disconnectedSocketId The socket id of the user, that has disconnected from the room.

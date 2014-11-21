@@ -24,10 +24,10 @@ $(function() {
         // TODO: IE9 and less does not support this!
         gameClient = new GameClient(gameState);
 
-        // TODO: disable join for returned room
-        //$("#" + gameState.roomId + " a")
         // display game information
         $('#game').removeClass('hidden');
+
+        $("#messages").empty();
 
         // draw game from game state
         gameClient.drawGame();
@@ -57,6 +57,9 @@ $(function() {
         hammer.on('swipedown', function () {
             gameClient.checkExecuteAction("DOWN");
         });
+
+        // prevent multiple binds
+        $(document).unbind("keydown");
 
         // event handler for keyboard events
         // TODO: Disable if typing message!!!
@@ -138,7 +141,11 @@ $(function() {
     });
 
     socket.on('chatMessage', function (data) {
-        $('#messages').append($('<li>').append('<span style="color: ' + gameClient.users[data.userId].color + '; font-weight: bold;">' + data.userId + ':</span> ' + data.message));
+        if (!data.userId) {
+            $('#messages').append($('<li>').append('<span style="font-weight: bold;">SERVER:</span> ' + data.message));
+        } else {
+            $('#messages').append($('<li>').append('<span style="color: ' + gameClient.users[data.userId].color + '; font-weight: bold;">' + data.userId + ':</span> ' + data.message));
+        }
     });
 
     // handle submit of new game room
@@ -186,6 +193,10 @@ $(function() {
         socket.emit('chatMessage', $('#message').val());
         $('#message').val('');
         return false;
+    });
+
+    $('#restart-game').click(function() {
+        socket.emit('restart');
     });
 });
 

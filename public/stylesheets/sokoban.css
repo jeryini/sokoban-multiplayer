@@ -1,15 +1,18 @@
 .stone {
     background-image: url("../images/stone.jpg");
+    background-size: 100%;
     position:absolute;
 }
 
 .placeholder {
-    background-color:#ff0000;
+    background-image: url("../images/placeholder.jpg");
+    background-size: 100%;
     position:absolute;
 }
 
 .block {
     background-image: url("../images/crate.jpg");
+    background-size: 100%;
     position:absolute;
 }
 

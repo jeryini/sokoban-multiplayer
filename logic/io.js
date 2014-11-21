@@ -33,6 +33,14 @@ io.on('connection', function(socket){
         var gameRoom = Object.create(GameRoom.prototype);
         GameRoom.call(gameRoom, roomName, levelId, description, userId, socket.id);
 
+        // check if user is already a member of room
+        if (socket.roomId) {
+            var joinedGameRoom = getGameRoom(socket.roomId);
+            // call logic for handling user removal
+            joinedGameRoom.removeUserFromGame(socket, io);
+            socket.leave(socket.roomId);
+        }
+
         // join the room on socket level
         socket.join(gameRoom.roomId);
         socket.roomId = gameRoom.roomId;
@@ -85,9 +93,15 @@ io.on('connection', function(socket){
         // join the game room, which also returns a new user
         var user = gameRoom.joinGameRoom(userId, socket.id);
 
+        // check if user is already a member of room
+        if (socket.roomId) {
+            var joinedGameRoom = getGameRoom(socket.roomId);
+            // call logic for handling user removal
+            joinedGameRoom.removeUserFromGame(socket, io);
+            socket.leave(socket.roomId);
+        }
+
         // join the room on socket level
-        // TODO: Check if user is already joined in other room.
-        // TODO: If it is, then we need to remove him from that room first.
         socket.join(roomId);
         socket.roomId = roomId;
 
@@ -176,6 +190,11 @@ io.on('connection', function(socket){
             });
         }
 
+        // check if solved
+        if (gameRoom.gameServer.solved()) {
+            io.sockets.in(socket.roomId).emit('chatMessage', {message: "SOLVED!"});
+        }
+
         // emit new move to all other players (broadcast) for given room.
         // We need to send player id and action to execute for given player id.
         // We also send new game state, to check on client side of the users, if
@@ -190,65 +209,21 @@ io.on('connection', function(socket){
      * @event SocketIO#disconnect
      */
     socket.on('disconnect', function() {
+        if (!socket.roomId) {
+            console.log('user without being connected to game room disconnected');
+            return false;
+        }
         // check if user belongs to game room
         var gameRoom = getGameRoom(socket.roomId);
 
         if (!gameRoom) {
-            console.log('user without being connected to game room disconnected');
             return false;
         }
 
-        // get the user that is disconnecting
-        var userId = gameRoom.users[socket.id].id;
+        // call logic for handling user removal
+        gameRoom.removeUserFromGame(socket, io);
+        socket.leave(socket.roomId);
 
-        // transfer ownership of the game room if the disconnected
-        // user is the owner of the game
-        gameRoom.transferOwnership(socket.id);
-
-        // if owner is still undefined, then there is no player left,
-        // delete the game room
-        if (gameRoom.owner === undefined) {
-            // delete it after 5s
-            setTimeout(function() {
-                // TODO: Check if someone else took the ownership of the room
-                /*
-                 The problem is, that when user is the only player in the game,
-                 the transfer of ownership is not possible. So the game room has to be
-                 destroyed on disconnect event, which can also happen on page refresh.
-                 This means that the GET for index will be triggered, which will in turn
-                 load the current game rooms. The problem is that this happens before the
-                 disconnect event! I can see only two solutions. The first is delayed delete,
-                 where other players can in the mean time take ownership of the game room with
-                 joining the game. The second is better. Create a session (cookie) which will
-                 store game rooms for the client. On reconnect take back the ownership of the
-                 room, but before that check if somebody else got it there before. The timeout
-                 before destroying the game room should be a few seconds.
-                 */
-                // TODO: See about using HTML5 Web Storage API for client side state handling!
-                // we need to check if in the meantime the ownership of the game
-                // room was taken by some other user
-                if (gameRoom.owner === undefined) {
-                    deleteGameRoom(socket.roomId);
-                    io.sockets.emit('deleteRoom', socket.roomId);
-                }
-            }, 5000);
-        }
-
-        // free player from game
-        gameRoom.gameServer.freePlayers.push(gameRoom.users[socket.id].player.id);
-
-        // remove user from game room
-        delete gameRoom.users[socket.id];
-
-        io.sockets.emit('updatePlayersIn', {
-            roomId: socket.roomId,
-            playersIn: Object.keys(gameRoom.gameServer.players).length -
-                gameRoom.gameServer.freePlayers.length
-        });
-
-        // broadcast to other users in the same room that the user has left
-        // the game room
-        socket.broadcast.to(socket.roomId).emit('userLeft', userId);
         console.log('user with game room disconnected');
     });
 
