@@ -49,33 +49,6 @@ GameServer.prototype.checkExecuteAction = function(actionName, playerId) {
     return this.executeAction(this.actions[actionName], playerId);
 };
 
-
-/**
- * Check if game state on client side matches game state on server side.
- * The function accepts only block and player position, because position of
- * stones and placeholders does not change.
- *
- * @param {} blocks
- * @param {} players
- * @returns {boolean} Returns true if game state is synchronized, otherwise false.
- */
-GameServer.prototype.synchronized = function(blocks, players) {
-    for (var block in this.blocks) {
-        if (!(block in blocks)) {
-            return false;
-        }
-    }
-
-    for (var player in this.players) {
-        if (!(this.players[player].position[0] === players[player].position[0] &&
-                this.players[player].position[1] === players[player].position[1])) {
-            return false;
-        }
-    }
-
-    return true;
-};
-
 /**
  * Set the game state from image.
  * The following rules apply:

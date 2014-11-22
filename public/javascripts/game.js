@@ -115,6 +115,32 @@ Game.prototype.executeAction = function(action, playerId) {
 };
 
 /**
+ * Check if game state on client side matches game state on server side and vice versa.
+ * The function accepts only block and player position, because position of
+ * stones and placeholders does not change.
+ *
+ * @param {} blocks The blocks position from either the client or server side.
+ * @param {} players The players position from either the client or server side.
+ * @returns {boolean} Returns true if game state is synchronized, otherwise false.
+ */
+Game.prototype.synchronized = function(blocks, players) {
+    for (var block in this.blocks) {
+        if (!(block in blocks)) {
+            return false;
+        }
+    }
+
+    for (var player in this.players) {
+        if (!(this.players[player].position[0] === players[player].position[0] &&
+            this.players[player].position[1] === players[player].position[1])) {
+            return false;
+        }
+    }
+
+    return true;
+};
+
+/**
  * Check if position matches any current player position.
  *
  * @param {number[]} position Position to match for.

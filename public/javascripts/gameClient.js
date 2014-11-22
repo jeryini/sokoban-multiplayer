@@ -227,5 +227,3 @@ GameClient.prototype.checkExecuteAction = function(actionName) {
         }
     });
 };
-
-

@@ -243,7 +243,11 @@ io.on('connection', function(socket){
         gameRoom.gameServer.blocks = {};
         gameRoom.gameServer.players = {};
 
-        gameRoom.gameServer.setGameStateFromImage(levels[gameRoom.gameServer.levelId]);
+        // reread starting game state
+        var gameState = gameRoom.gameServer.setGameStateFromImage(levels[gameRoom.gameServer.levelId]);
+
+        gameRoom.gameServer.blocks = gameState.blocks;
+        gameRoom.gameServer.players = gameState.players;
 
         // send message to everyone in the game room, including the sender
         io.sockets.in(socket.roomId).emit('restart', gameRoom.gameServer.blocks, gameRoom.gameServer.players);
@@ -265,4 +269,3 @@ io.on('connection', function(socket){
 
 /** Export io. */
 module.exports = io;
-

@@ -2,6 +2,9 @@
 $(function() {
     /**
      * Socket event for creation of new game room
+     *
+     * @event SocketIO#newGameRoom
+     * @param data Contains information about new game room.
      */
     socket.on('newGameRoom', function (data) {
         // remove the info about the no active game rooms
@@ -17,16 +20,17 @@ $(function() {
 
     /**
      * On starting state receive current game state.
+     *
+     * @event SocketIO#gameServerState
+     * @param gameState Contains new game state.
      */
     socket.on('gameServerState', function (gameState) {
         // create a new game client
-        // TODO: Use Object.create instead of new!
-        // TODO: IE9 and less does not support this!
-        gameClient = new GameClient(gameState);
+        gameClient = Object.create(GameClient.prototype);
+        GameClient.call(gameClient, gameState);
 
-        // display game information
+        // display game
         $('#game').removeClass('hidden');
-
         $("#messages").empty();
 
         // draw game from game state
@@ -42,7 +46,7 @@ $(function() {
 
         // event handler for swipe events
         var hammer = new Hammer.Manager(document.getElementById('sokoban'));
-        var swipe = new Hammer.Swipe();
+        var swipe = new Hammer.Swipe({ velocity: 0.35});
         hammer.add(swipe);
 
         hammer.on('swipeleft', function () {
@@ -62,7 +66,6 @@ $(function() {
         $(document).unbind("keydown");
 
         // event handler for keyboard events
-        // TODO: Disable if typing message!!!
         $(document).keydown(function (event) {
             switch (event.keyCode) {
                 // key press a
@@ -87,6 +90,9 @@ $(function() {
 
     /**
      * Update the number of players in game.
+     *
+     * @event SocketIO#updatePlayersIn
+     * @param data Contains number of players in game.
      */
     socket.on('updatePlayersIn', function (data) {
         $("#" + data.roomId + " #players-in").text(data.playersIn);
@@ -95,51 +101,112 @@ $(function() {
         }
     });
 
+    /**
+     * When user joins call appropriate logic and list new players.
+     *
+     * @event SocketIO#userJoined
+     * @param userId Id of the user that joined.
+     * @param player Player that belongs to user that joined the game.
+     */
     socket.on('userJoined', function (userId, player) {
         $('#messages').append($('<li>').append('User <span style="color: ' + player.color + '; font-weight: bold;">' + userId + '</span> has joined the game.'));
         gameClient.userJoin(userId, player);
         gameClient.listPlayers();
     });
 
+    /**
+     * When user lefts call appropriate logic and list players.
+     *
+     * @event SocketIO#userLeft
+     * @param userId Id of the user that left.
+     */
     socket.on('userLeft', function (userId) {
         $('#messages').append($('<li>').append('User <span style="color: ' + gameClient.users[userId].color + '; font-weight: bold;">' + userId + '</span> has left the game.'));
         gameClient.userLeft(userId);
         gameClient.listPlayers();
     });
 
+    /**
+     * Game restart.
+     *
+     * @event SocketIO#restart
+     * @param blocks The blocks position.
+     * @param players The position of the players.
+     */
     socket.on('restart', function (blocks, players) {
         gameClient.blocks = blocks;
         gameClient.players = players;
 
         // redraw game
-        gameClient.drawGame();
+        gameClient.redrawGame();
     });
 
+    /**
+     * New move from the user. Here we need to check if after the execution
+     * of the new move, the state on client side matches the state, that was
+     * sent from the server.
+     *
+     * @event SocketIO#newMove
+     * @param action Action that was executed.
+     * @param blocks The new position of the blocks on server side.
+     * @param players The new position of the players on server side.
+     * @param playerId The id of the player, who executed the action.
+     */
     socket.on('newMove', function (action, blocks, players, playerId) {
-        // TODO: First try to execute given action and compare game states
-        // TODO: If they do not match with state sent from server, then
-        // TODO: completely redraw the game state, otherwise draw only the
-        // TODO: selected move
-        gameClient.blocks = blocks;
-        gameClient.players = players;
-        action = gameClient.actions[action];
+        // first we will try to execute given action on client
+        var executed = gameClient.executeAction(gameClient.actions[action], playerId);
 
-        // animate player movement for given action
-        // and player id
-        gameClient.drawMove(action, playerId);
+        // if action was executed successfully, then we also need to compare
+        // game states
+        if (executed) {
+            if (gameClient.synchronized(blocks, players)) {
+                // the game is synchronized. We need to only draw move of the player.
+                action = gameClient.actions[action];
+
+                // animate player movement for given action
+                // and player id
+                gameClient.drawMove(action, playerId);
+            } else {
+                // game is not synchronized, redraw the whole game
+                gameClient.blocks = blocks;
+                gameClient.players = players;
+                gameClient.redrawGame();
+            }
+        } else {
+            // otherwise if the action was not executed, it implicitly means
+            // that the game state on client side does not match. we redraw the whole game
+            gameClient.blocks = blocks;
+            gameClient.players = players;
+            gameClient.redrawGame();
+        }
     });
 
+    /**
+     * Delete room.
+     *
+     * @event SocketIO#deleteRoom
+     * @param roomId The id of the room to delete.
+     */
     socket.on('deleteRoom', function (roomId) {
         $("#" + roomId).empty();
     });
 
     /**
+     * Enable game.
      *
+     * @event SocketIO#gameEnabled
+     * @param {boolean} enabled Is game enabled
      */
     socket.on('gameEnabled', function (enabled) {
         gameClient.enabled = enabled;
     });
 
+    /**
+     * New chat message.
+     *
+     * @event SocketIO#chatMessage
+     * @param data Contains message and the id of the user that send the message.
+     */
     socket.on('chatMessage', function (data) {
         if (!data.userId) {
             $('#messages').append($('<li>').append('<span style="font-weight: bold;">SERVER:</span> ' + data.message));
@@ -148,7 +215,11 @@ $(function() {
         }
     });
 
-    // handle submit of new game room
+    /**
+     * Submit new game room.
+     *
+     * @event submit
+     */
     $('#game-room-create').submit(function (evn) {
         evn.preventDefault();
 
@@ -163,7 +234,11 @@ $(function() {
         }
     });
 
-// restart the game
+    /**
+     * Restart the game.
+     *
+     * @event click
+     */
     $('#restart').click(function () {
         socket.emit('restart');
     });
@@ -189,14 +264,27 @@ $(function() {
         }
     });
 
+    /**
+     * Handle submit of new message.
+     */
     $('#form-message').submit(function () {
         socket.emit('chatMessage', $('#message').val());
         $('#message').val('');
         return false;
     });
 
+    /**
+     * Handle restart of the game.
+     */
     $('#restart-game').click(function() {
         socket.emit('restart');
     });
-});
 
+    /**
+     * Prevent key down when writing a message. This prevents
+     * player movement, if user presses one of the wasd keys.
+     */
+    $('#message').keydown(function(e) {
+        e.stopPropagation();
+    });
+});
