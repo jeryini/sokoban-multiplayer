@@ -26,11 +26,15 @@ A quick taste how the game looks:
 
 ## Running
 A quick tutorial for running the game.
-1. First run the following command in project root (this is where package.json is located):
-   npm install
 
-2. Open node.js command prompt (in project root) and run the following:
+1. First run the following command in project root (this is where package.json is located):
+   ```
+   npm install
+   ```
+2. Open node.js command prompt (in project root) and run the following command:
+   ```
    node bin\www.js
+   ```
 
 3. Browse to http://localhost:3000 and play!!!
 
