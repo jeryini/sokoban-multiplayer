@@ -36,7 +36,7 @@ A quick tutorial for running the game.
    node bin\www.js
    ```
 
-3. Browse to http://localhost:3000 and play!!!
+3. Browse to <http://localhost:3000> and play!!!
 
 ## More information
 More information about the solution is available in the [following report](https://onedrive.live.com/redir?resid=3CA18FAC4B5A16DF%2170265) but is only available in Slovenian language.
