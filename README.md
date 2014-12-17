@@ -2,7 +2,7 @@
 A multiplayer version of the popular Japanese game Sokoban.
 
 ## Purpose
-This project was done for a challenge which was organised by [Celtra](http://www.celtra.com/) and [Faculty of Computer and Information Science](http://www.fri.uni-lj.si/en/), [University of Ljubljana](http://www.uni-lj.si/eng/). More about this challenge on [faculty page](http://www.fri.uni-lj.si/si/raziskave/studentski_izzivi/celtrin_izziv/).
+This project was done for a challenge which was organised by [Celtra](http://www.celtra.com/) and [Faculty of Computer and Information Science](http://www.fri.uni-lj.si/en/), [University of Ljubljana](http://www.uni-lj.si/eng/). More about this challenge on [faculty page](http://www.fri.uni-lj.si/si/raziskave/studentski_izzivi/celtrin_izziv/). The project was selected as the best solution in the category of HTML5 multiplayer game and has consequently won the challenge in that category ([news in Slovenian](http://www.fri.uni-lj.si/si/novice_in_dogodki/aktivne/18809/novica.html)).
 
 ## General Requirements
 This solution **requires** the following systems:
